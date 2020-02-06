@@ -28,6 +28,6 @@ git clone https://github.com/sandflow/jid.git
 cd jid
 mkdir build
 cd build
-cmake ..
+cmake -DCMAKE_BUILD_TYPE=Release ..
 ```
 
