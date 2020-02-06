@@ -26,7 +26,7 @@ sudo apt-get install libxerces-c-dev
 sudo apt-get install libssl-dev
 sudo apt-get install cmake
 
-git clone https://github.com/sandflow/jid.git
+git clone --recurse-submodules https://github.com/sandflow/jid.git
 cd jid
 mkdir build
 cd build
