@@ -1,5 +1,7 @@
 # JPEG 2000 to IMF DCDM (jid)
 
+_THIS IS EXPERIMENTAL SOFTWARE AND CONTAINS BUGS. DO NOT USE FOR PRODUCTION._
+
 Wraps JPEG 2000 codestreams into an Image Track File as specified in ST 2067-40
 
 ## Prerequisites
