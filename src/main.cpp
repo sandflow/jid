@@ -30,7 +30,8 @@
 #include <Metadata.h>
 #include <assert.h>
 #include <boost/program_options.hpp>
-#include <boost/algorithm/string.hpp> 
+#include <boost/algorithm/string.hpp>
+#include <stdexcept>
 #include <iostream>
 #include <string>
 #include "CodestreamSequence.h"
@@ -90,7 +91,7 @@ namespace ASDCP {
         boost::split(params, s, boost::is_any_of("/"));
 
         if (params.size() == 0 || params.size() > 2) {
-            throw std::exception("Cannot read rational");
+            throw std::runtime_error("Cannot read rational");
         }
 
         r = ASDCP::Rational(
@@ -131,7 +132,7 @@ std::istream& operator>>(std::istream& is, InputFormats& f) {
     } else if (s == "MJC") {
         f = InputFormats::MJC;
     } else {
-        throw std::exception("Unknown input file format");
+        throw std::runtime_error("Unknown input file format");
     }
 
     return is;
@@ -187,7 +188,7 @@ int main(int argc, const char* argv[]) {
         const ASDCP::Dictionary* g_dict = &ASDCP::DefaultSMPTEDict();
 
         if (!g_dict) {
-            throw std::exception("Cannot open SMPTE dictionary");
+            throw std::runtime_error("Cannot open SMPTE dictionary");
         }
 
         /* setup the input codestream sequence */
@@ -211,7 +212,7 @@ int main(int argc, const char* argv[]) {
                 int mode = _setmode(_fileno(stdin), O_BINARY);
 
                 if (mode == -1) {
-                    throw std::exception("Cannot reopne stdout");
+                    throw std::runtime_error("Cannot reopne stdout");
                 }
 
                 f_in = stdin;
@@ -229,7 +230,7 @@ int main(int argc, const char* argv[]) {
             }
 
             if (!f_in) {
-                throw std::exception("Cannot open input file");
+                throw std::runtime_error("Cannot open input file");
             }
 
             switch (cli_args["format"].as<InputFormats>()) {
@@ -287,7 +288,7 @@ int main(int argc, const char* argv[]) {
             result = ASDCP::JP2K::ParseMetadataIntoDesc(fb, pdesc, &start_of_data);
 
             if (ASDCP_FAILURE(result)) {
-                throw std::exception(result.Message());
+                throw std::runtime_error(result.Message());
             }
 
             pdesc.EditRate = cli_args["fps"].as<ASDCP::Rational>();
@@ -312,7 +313,7 @@ int main(int argc, const char* argv[]) {
                 );
 
                 if (ASDCP_FAILURE(result)) {
-                    throw std::exception(result.Message());
+                    throw std::runtime_error(result.Message());
                 }
 
                 rgba_desc->TransferCharacteristic = TRANSFERCHARACTERISTIC_CINEMAMEZZANINEDCDM_UL;
@@ -325,7 +326,7 @@ int main(int argc, const char* argv[]) {
                 ASDCP::MXF::FileDescriptor* essence_descriptor = static_cast<ASDCP::MXF::FileDescriptor*>(rgba_desc);
 
                 if (ASDCP_FAILURE(result)) {
-                    throw std::exception(result.Message());
+                    throw std::runtime_error(result.Message());
                 }
 
                 result = writer.OpenWrite(
@@ -339,7 +340,7 @@ int main(int argc, const char* argv[]) {
                     60);
 
                 if (ASDCP_FAILURE(result)) {
-                    throw std::exception(result.Message());
+                    throw std::runtime_error(result.Message());
                 }
 
             }
@@ -349,7 +350,7 @@ int main(int argc, const char* argv[]) {
             result = writer.WriteFrame(fb, NULL, NULL);
 
             if (ASDCP_FAILURE(result)) {
-                throw std::exception(result.Message());
+                throw std::runtime_error(result.Message());
             }
 
             /* move to the next codestream */
@@ -363,7 +364,7 @@ int main(int argc, const char* argv[]) {
         result = writer.Finalize();
 
         if (ASDCP_FAILURE(result)) {
-            throw std::exception(result.Message());
+            throw std::runtime_error(result.Message());
         }
 
     } catch (boost::program_options::required_option e) {
@@ -371,7 +372,7 @@ int main(int argc, const char* argv[]) {
         std::cout << cli_opts << std::endl;
         return 1;
 
-    } catch (std::exception e) {
+    } catch (std::runtime_error e) {
 
         std::cout << e.what() << std::endl;
         return 1;

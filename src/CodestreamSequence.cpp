@@ -25,12 +25,13 @@
  */
 
 #include "CodestreamSequence.h"
+#include <stdexcept>
 
 /* J2CFile */
 
 J2CFile::J2CFile(FILE *fp,
                  std::vector<uint8_t>::size_type initial_buf_sz,
-                 std::vector<uint8_t>::size_type read_buf_sz) : codestream_(), good_(true)
+                 std::vector<uint8_t>::size_type read_buf_sz) : good_(true), codestream_()
 {
 
   this->codestream_.reserve(initial_buf_sz);
@@ -65,7 +66,7 @@ void J2CFile::fill(ASDCP::JP2K::FrameBuffer &fb)
   result = fb.SetData(this->codestream_.data(), (uint32_t)this->codestream_.size());
 
   if (ASDCP_FAILURE(result)) {
-      throw std::exception("Frame buffer allocation failed");
+      throw std::runtime_error("Frame buffer allocation failed");
   }
 
   assert(ASDCP_SUCCESS(result));
@@ -73,14 +74,14 @@ void J2CFile::fill(ASDCP::JP2K::FrameBuffer &fb)
   uint32_t sz = fb.Size((uint32_t)this->codestream_.size());
 
   if (sz != this->codestream_.size()) {
-      throw std::exception("Frame buffer resizing failed");
+      throw std::runtime_error("Frame buffer resizing failed");
   }
 
 };
 
 /* MJCFile */
 
-MJCFile::MJCFile(FILE *fp) : codestream_(), good_(true), fp_(fp)
+MJCFile::MJCFile(FILE *fp) : good_(true), codestream_(), fp_(fp)
 {
 
   uint8_t header[16];
@@ -89,7 +90,7 @@ MJCFile::MJCFile(FILE *fp) : codestream_(), good_(true), fp_(fp)
 
   if (sz != sizeof header || header[0] != 'M' || header[1] != 'J' || header[2] != 'C' || header[3] != '2')
   {
-    throw std::exception("Bad MJC file");
+    throw std::runtime_error("Bad MJC file");
   }
 
   this->next();
@@ -134,23 +135,21 @@ void MJCFile::fill(ASDCP::JP2K::FrameBuffer &fb)
   result = fb.SetData(this->codestream_.data(), (uint32_t)this->codestream_.size());
 
   if (ASDCP_FAILURE(result)) {
-      throw std::exception("Frame buffer allocation failed");
+      throw std::runtime_error("Frame buffer allocation failed");
   }
 
   uint32_t sz = fb.Size((uint32_t)this->codestream_.size());
 
   if (sz != this->codestream_.size()) {
-      throw std::exception("Frame buffer resizing failed");
+      throw std::runtime_error("Frame buffer resizing failed");
   }
 };
 
 /* FakeSequence */
 
-FakeSequence::FakeSequence(uint32_t frame_count, uint32_t frame_size) : frame_count_(frame_count),
-                                                                                                cur_frame_(0),
-                                                                                                codestream_(frame_size)
+FakeSequence::FakeSequence(uint32_t frame_count, uint32_t frame_size) :
+  frame_count_(frame_count), cur_frame_(0), codestream_(frame_size)
 {
-
   std::copy(CODESTREAM_HEADER_, CODESTREAM_HEADER_ + sizeof CODESTREAM_HEADER_, codestream_.begin());
 
   std::fill(codestream_.begin() + sizeof CODESTREAM_HEADER_, codestream_.end(), (uint8_t)0x00);
@@ -175,7 +174,7 @@ void FakeSequence::fill(ASDCP::JP2K::FrameBuffer &fb)
   uint32_t sz = fb.Size((uint32_t)this->codestream_.size());
 
   if (sz != this->codestream_.size()) {
-      throw std::exception("Frame buffer resizing failed");
+      throw std::runtime_error("Frame buffer resizing failed");
   }
 };
 
