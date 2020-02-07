@@ -114,6 +114,44 @@ namespace ASDCP {
 
 }
 
+namespace Kumu {
+    /* overloads needed for boost::program_options */
+
+    std::istream& operator>>(std::istream& is, Kumu::UUID& uuid) {
+
+        std::string s;
+
+        is >> s;
+
+        if (!uuid.DecodeHex(s.c_str())) {
+            throw std::invalid_argument("Bad UUID");
+        }
+
+        return is;
+    }
+
+
+    /* overloads needed for boost::program_options */
+
+    std::ostream& operator<<(std::ostream& os, const Kumu::UUID& uuid) {
+
+        char buf[128];
+
+        if (uuid.EncodeString(buf, sizeof buf)) {
+
+            os << buf;
+
+        } else {
+
+            throw std::invalid_argument("Bad UUID");
+
+        }
+
+        return os;
+    }
+
+}
+
 /* enumeration of supported input formats */
 
 
@@ -165,8 +203,9 @@ int main(int argc, const char* argv[]) {
 
     cli_opts.add_options()
         ("help", "produce help message")
-        ("fps", boost::program_options::value<ASDCP::Rational>()->default_value(ASDCP::EditRate_24), "Edit rate")
-        ("format", boost::program_options::value<InputFormats>()->default_value(InputFormats::J2C), "Input file format")
+        ("fps", boost::program_options::value<ASDCP::Rational>()->default_value(ASDCP::EditRate_24), "Edit rate, e.g. 24/1")
+        ("format", boost::program_options::value<InputFormats>()->default_value(InputFormats::J2C), "Input file format (MJC or J2C)")
+        ("assetid", boost::program_options::value<Kumu::UUID>(), "Asset UUID in hex notation, e.g. 8538b543169743dd9a08c6d8b4b1b7df")
         ("out", boost::program_options::value<std::string>()->required(), "Output file path")
         ("fake", boost::program_options::bool_switch()->default_value(false), "Generate fake input data")
         ("in", boost::program_options::value<std::string>(), "Input file path (or stdin if none is specified)");
@@ -262,11 +301,17 @@ int main(int argc, const char* argv[]) {
 
         writer_info.LabelSetType = ASDCP::LS_MXF_SMPTE;
 
-        if (false /*Options.asset_id_flag*/)
-            /*memcpy(Info.AssetUUID, Options.asset_id_value, UUIDlen);*/
-            1;
-        else
+        if (cli_args.count("assetid")) {
+
+            const Kumu::UUID& uuid  = cli_args["assetid"].as<ASDCP::UUID>();
+            
+            memcpy(writer_info.AssetUUID, uuid.Value(), uuid.Size());
+        
+        } else {
+
             Kumu::GenRandomUUID(writer_info.AssetUUID);
+
+        }
 
         /* keep count of the number of frames written to the file */
 
