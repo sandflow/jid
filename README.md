@@ -11,6 +11,11 @@ Wraps JPEG 2000 codestreams into an Image Track File as specified in ST 2067-40
 * boost::program_options
 * cmake
 
+## Known limitations
+
+* Supported image characteristics: DCDM XYZ @ 4:4:4
+* Supported input formats: MJC codestream sequence and J2C single codestream
+
 ## Examples uses
 
 ### Performance comparison
@@ -67,8 +72,8 @@ make
 
 ```
 brew install boost
-brew install xcerces-c
-brew install opensll
+brew install xerces-c
+brew install openssl
 brew link openssl --force
 brew install cmake
 
