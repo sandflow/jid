@@ -35,6 +35,7 @@
 #include <iostream>
 #include <string>
 #include "CodestreamSequence.h"
+#include "J2KProfileULMap.h"
 
 #ifdef WIN32
 #include <io.h>
@@ -58,10 +59,10 @@ public:
 };
 
 
-unsigned char TRANSFERCHARACTERISTIC_CINEMAMEZZANINEDCDM_UL[] = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0e, 0x04, 0x01, 0x01, 0x01, 0x01, 0x13, 0x00, 0x00 };
-unsigned char COLORPRIMARIES_CINEMAMEZZANINE_UL[] = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x03, 0x08, 0x00, 0x00 };
-unsigned char HTJ2KPICTURECODINGSCHEMEGENERIC_UL[] = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0D, 0x04, 0x01, 0x02, 0x02, 0x03, 0x01, 0x08, 0x01 };
-unsigned char ISOIEC154441JPEG2002_UL[] = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x07, 0x04, 0x01, 0x02, 0x02, 0x03, 0x01, 0x01, 0x00 };
+uint8_t TRANSFERCHARACTERISTIC_CINEMAMEZZANINEDCDM_UL[] = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0e, 0x04, 0x01, 0x01, 0x01, 0x01, 0x13, 0x00, 0x00 };
+uint8_t COLORPRIMARIES_CINEMAMEZZANINE_UL[] = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x03, 0x08, 0x00, 0x00 };
+uint8_t HTJ2KPICTURECODINGSCHEMEGENERIC_UL[] = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0D, 0x04, 0x01, 0x02, 0x02, 0x03, 0x01, 0x08, 0x01 };
+uint8_t ISOIEC154441JPEG2002_UL[] = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x07, 0x04, 0x01, 0x02, 0x02, 0x03, 0x01, 0x01, 0x00 };
 
 
 namespace ASDCP {
@@ -297,13 +298,21 @@ int main(int argc, const char* argv[]) {
 
             if (frame_count == 0) {
 
-                /* fill the essence descriptor */
+                /* initialize the essence descriptor */
 
                 ASDCP::MXF::InterchangeObject_list_t essence_sub_descriptors;
 
                 ASDCP::MXF::RGBAEssenceDescriptor* rgba_desc = new ASDCP::MXF::RGBAEssenceDescriptor(g_dict);
 
                 essence_sub_descriptors.push_back(new ASDCP::MXF::JPEG2000PictureSubDescriptor(g_dict));
+
+                /* set J2CLayout */
+
+                const byte_t PIXELLAYOUT_XYZ[ASDCP::MXF::RGBAValueLength] = { 0xd8, 0x0c, 0xd9, 0x0c, 0xda, 0x0c, 0x00 };
+
+                static_cast<ASDCP::MXF::JPEG2000PictureSubDescriptor*>(essence_sub_descriptors.back())->J2CLayout.set(PIXELLAYOUT_XYZ);
+
+                /* fill the essence descriptor */
 
                 result = ASDCP::JP2K_PDesc_to_MD(
                     pdesc,
@@ -314,6 +323,40 @@ int main(int argc, const char* argv[]) {
 
                 if (ASDCP_FAILURE(result)) {
                     throw std::runtime_error(result.Message());
+                }
+
+                /* we do not know the container duration */
+
+                rgba_desc->ContainerDuration.empty();
+
+                /* determine Picture Essence Coding Label */
+
+                if (pdesc.ExtendedCapabilities.Pcap & 0x00020000) {
+
+                    /* Part 15 codestream */
+
+                    rgba_desc->PictureEssenceCoding = HTJ2KPICTURECODINGSCHEMEGENERIC_UL;
+
+                } else {
+
+                    /* Part 1 codestream */
+
+                    std::map<int, std::pair<int, int>>::const_iterator ul_bytes = J2KPROFILE_UL_MAP.find(pdesc.Rsize);
+
+                    if (ul_bytes != J2KPROFILE_UL_MAP.end()) {
+
+                        /* It is an IMF profile */
+
+                        uint8_t ul[16] = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x02, 0x02, 0x03, 0x01, static_cast<uint8_t>(ul_bytes->second.first), static_cast<uint8_t>(ul_bytes->second.second) };
+
+                        rgba_desc->PictureEssenceCoding = ul;
+
+                    } else {
+
+                        throw std::runtime_error("Supports only J2K IMF profiles or HTJ2K");
+
+                    }
+
                 }
 
                 rgba_desc->TransferCharacteristic = TRANSFERCHARACTERISTIC_CINEMAMEZZANINEDCDM_UL;
