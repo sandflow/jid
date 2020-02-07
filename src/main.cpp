@@ -325,10 +325,6 @@ int main(int argc, const char* argv[]) {
                     throw std::runtime_error(result.Message());
                 }
 
-                /* we do not know the container duration */
-
-                rgba_desc->ContainerDuration.empty();
-
                 /* determine Picture Essence Coding Label */
 
                 if (pdesc.ExtendedCapabilities.Pcap & 0x00020000) {
@@ -361,10 +357,13 @@ int main(int argc, const char* argv[]) {
 
                 rgba_desc->TransferCharacteristic = TRANSFERCHARACTERISTIC_CINEMAMEZZANINEDCDM_UL;
                 rgba_desc->ColorPrimaries = COLORPRIMARIES_CINEMAMEZZANINE_UL;
-                rgba_desc->PictureEssenceCoding = pdesc.ExtendedCapabilities.Pcap & 0x00020000 ? HTJ2KPICTURECODINGSCHEMEGENERIC_UL : ISOIEC154441JPEG2002_UL /* TODO: support part 1 IMF profiles */;
-                rgba_desc->ComponentMaxRef = 4095 /* 12-bit */;
+                rgba_desc->ComponentMaxRef = (2 << pdesc.ImageComponents->Ssize) - 1;
                 rgba_desc->ComponentMinRef = 0;
                 rgba_desc->VideoLineMap = ASDCP::MXF::LineMapPair(0, 0);
+
+                /* we do not know the container duration */
+
+                rgba_desc->ContainerDuration.empty();
 
                 ASDCP::MXF::FileDescriptor* essence_descriptor = static_cast<ASDCP::MXF::FileDescriptor*>(rgba_desc);
 
