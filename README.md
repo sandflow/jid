@@ -81,6 +81,22 @@ git clone --recurse-submodules https://github.com/sandflow/jid.git
 cd jid
 mkdir build
 cd build
-cmake -DOpenSSLLib_include_DIR=/usr/local/opt/openssl@1.1/include -DOpenSSLLib_PATH=/usr/local/opt/openssl@1.1/lib/libcrypto.dylib ..
+cmake -DCMAKE_BUILD_TYPE=Release -DOpenSSLLib_include_DIR=/usr/local/opt/openssl@1.1/include \ 
+  -DOpenSSLLib_PATH=/usr/local/opt/openssl@1.1/lib/libcrypto.dylib ..
 make
 ```
+
+## Microsoft Visual Studio build instructions (MSVC)
+
+* install OpenSSL binaries from https://slproweb.com/products/Win32OpenSSL.html
+* install boost binaries from
+https://sourceforge.net/projects/boost/files/boost-binaries/1.72.0/
+* download xerces c++ from http://xerces.apache.org/mirrors.cgi and
+build using MSVC
+* configure and generate an MSVC project using CMake GUI, setting:
+  * Boost_INCLUDE_DIR
+  * XercescppLib_PATH
+  * XercescppLib_Debug_PATH
+  * XercescppLib_include_DIR
+  * OpenSSLLib_PATH
+  * OpenSSLLib_include_DIR
