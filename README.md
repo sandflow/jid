@@ -81,6 +81,6 @@ git clone --recurse-submodules https://github.com/sandflow/jid.git
 cd jid
 mkdir build
 cd build
-cmake -DCMAKE_BUILD_TYPE=Release -DOpenSSLLib_include_DIR=/usr/local/opt/openssl@1.1/include ..
+cmake -DOpenSSLLib_include_DIR=/usr/local/opt/openssl@1.1/include -DOpenSSLLib_PATH=/usr/local/opt/openssl@1.1/lib/libcrypto.dylib ..
 make
 ```
