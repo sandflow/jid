@@ -22,11 +22,24 @@ endif(WIN32)
 
 # project files
 
-file(GLOB_RECURSE SRC_FILES src/*.cpp src/*.h )
-file(GLOB_RECURSE INCLUDE_FILES src/*.h )
+file(GLOB_RECURSE SRC_FILES src/main/*.cpp src/*.h )
+file(GLOB_RECURSE INCLUDE_FILES src/main/*.h )
 include_directories(${INCLUDE_FILES})
 add_executable(${PROJECT_NAME} ${SRC_FILES} ${INCLUDE_FILES})
 target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} libas02)
+
+# tests
+
+enable_testing()
+
+add_test(NAME "part1-j2c-wrapping" COMMAND ${PROJECT_NAME} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part1.j2c" --format J2C --out part1-j2c.mxf)
+
+add_test(NAME "part15-j2c-wrapping" COMMAND ${PROJECT_NAME} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part15.j2c" --format J2C --out part15-j2c.mxf)
+
+add_test(NAME "part1-mjc-wrapping" COMMAND ${PROJECT_NAME} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part1.mjc" --format MJC --out part1-mjc.mxf)
+
+add_test(NAME "part15-mjc-wrapping" COMMAND ${PROJECT_NAME} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part15.mjc" --format MJC --out part15-mjc.mxf)
+
 
 # compiler settings
 
