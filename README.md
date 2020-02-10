@@ -78,7 +78,6 @@ ctest
 brew install boost
 brew install xerces-c
 brew install openssl
-brew link openssl --force
 brew install cmake
 
 git clone --recurse-submodules https://github.com/sandflow/jid.git
