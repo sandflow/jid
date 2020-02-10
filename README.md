@@ -1,6 +1,6 @@
 # JPEG 2000 to IMF DCDM (jid)
 
-_THIS IS EXPERIMENTAL SOFTWARE. DO NOT USE FOR PRODUCTION._
+_THIS IS EXPERIMENTAL SOFTWARE_
 
 Wraps JPEG 2000 codestreams into an Image Track File as specified in ST 2067-40
 
@@ -19,6 +19,8 @@ Wraps JPEG 2000 codestreams into an Image Track File as specified in ST 2067-40
 ## Examples uses
 
 ### Performance comparison
+
+The following use the demonstration encoder/decoder available at <https://kakadusoftware.com/downloads/>.
 
 #### JPEG 2000 Part 1
 
@@ -50,7 +52,6 @@ kdu_v_compress -i ~/Downloads/tiff-files/mer_shrt_23976_vdm_sdr_rec709_g24_3840x
 Cprecincts="{256,256},{256,256},{256,256},{256,256},{256,256},{256,256},{128,128}" ORGgen_tlm="{3}" ORGtparts=C Cblk="{32,32}" Creversible=yes Cmodes=HT -in_prec 12M \
   | dcdm2imf --format MJC --out ~/Downloads/part15-r.mxf
 ```
-
 
 ## Ubuntu build instructions
 
