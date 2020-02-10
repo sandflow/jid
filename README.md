@@ -7,7 +7,7 @@ Wraps JPEG 2000 codestreams into an Image Track File as specified in ST 2067-40
 ## Prerequisites
 
 * xerces (required by asdcplib)
-* opensll (required by asdcplib)
+* openssl (required by asdcplib)
 * boost::program_options
 * cmake
 
