@@ -40,6 +40,8 @@ Cprecincts="{256,256},{256,256},{256,256},{256,256},{256,256},{256,256},{128,128
 
 ### Typical use
 
+#### JPEG 2000 Part 1
+
 ```
 kdu_v_compress -i ~/Downloads/tiff-files/mer_shrt_23976_vdm_sdr_rec709_g24_3840x2160_20170913_12bit_DCDM.00090000.tif+100 -o - Simf="{6,0,rev}" -in_prec 12M \
   | dcdm2imf --format MJC --out ~/Downloads/part1-r.mxf
