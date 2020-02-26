@@ -34,6 +34,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <string>
+#include <map>
 #include "CodestreamSequence.h"
 #include "J2KProfileULMap.h"
 
@@ -44,7 +45,8 @@
 #include <stdio.h>
 #endif
 
-// local program identification info written to file headers
+/* authoring identification info written to file headers */
+
 class DCDM2IMFWriterInfo : public ASDCP::WriterInfo {
 public:
     DCDM2IMFWriterInfo() {
@@ -59,11 +61,26 @@ public:
 };
 
 
-uint8_t TRANSFERCHARACTERISTIC_CINEMAMEZZANINEDCDM_UL[] = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0e, 0x04, 0x01, 0x01, 0x01, 0x01, 0x13, 0x00, 0x00 };
-uint8_t COLORPRIMARIES_CINEMAMEZZANINE_UL[] = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x03, 0x08, 0x00, 0x00 };
-uint8_t HTJ2KPICTURECODINGSCHEMEGENERIC_UL[] = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0D, 0x04, 0x01, 0x02, 0x02, 0x03, 0x01, 0x08, 0x01 };
-uint8_t ISOIEC154441JPEG2002_UL[] = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x07, 0x04, 0x01, 0x02, 0x02, 0x03, 0x01, 0x01, 0x00 };
+/* hard-coded UL definitions */
 
+std::array<uint8_t, 16> CodingEquations_ITU601 = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x04, 0x01, 0x01, 0x01, 0x02, 0x01, 0x00, 0x00 };
+std::array<uint8_t, 16> CodingEquations_ITU709 = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x04, 0x01, 0x01, 0x01, 0x02, 0x02, 0x00, 0x00 };
+std::array<uint8_t, 16> CodingEquations_ITU2020_NCL = { 0x06, 0x0e, 0x2b, 0x34, 04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x02, 0x06, 0x00, 0x00 };
+
+std::array<uint8_t, 16> TransferCharacteristic_ITU709 = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x01, 0x08, 0x00, 0x00 };
+std::array<uint8_t, 16> TransferCharacteristic_IEC6196624_xvYCC = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x01, 0x08, 0x00, 0x00 };
+std::array<uint8_t, 16> TransferCharacteristic_ITU2020 = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0e, 0x04, 0x01, 0x01, 0x01, 0x01, 0x09, 0x00, 0x00 };
+std::array<uint8_t, 16> TransferCharacteristic_SMPTEST2084 = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x01, 0x0a, 0x00, 0x00 };
+std::array<uint8_t, 16> TransferCharacteristic_CinemaMezzanine_DCDM = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0e, 0x04, 0x01, 0x01, 0x01, 0x01, 0x13, 0x00, 0x00 };
+
+std::array<uint8_t, 16> ColorPrimaries_SMPTE170M = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x06, 0x04, 0x01, 0x01, 0x01, 0x03, 0x01, 0x00, 0x00 };
+std::array<uint8_t, 16> ColorPrimaries_ITU470_PAL = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x06, 0x04, 0x01, 0x01, 0x01, 0x03, 0x02, 0x00, 0x00 };
+std::array<uint8_t, 16> ColorPrimaries_ITU709 = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x06, 0x04, 0x01, 0x01, 0x01, 0x03, 0x03, 0x00, 0x00 };
+std::array<uint8_t, 16> ColorPrimaries_ITU2020 = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x03, 0x04, 0x00, 0x00 };
+std::array<uint8_t, 16> ColorPrimaries_P3D65 = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x03, 0x06, 0x00, 0x00 };
+std::array<uint8_t, 16> ColorPrimaries_CinemaMezzanine = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x03, 0x08, 0x00, 0x00 };
+
+std::array<uint8_t, 16> HTJ2KPictureCodingSchemeGeneric = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0D, 0x04, 0x01, 0x02, 0x02, 0x03, 0x01, 0x08, 0x01 };
 
 namespace ASDCP {
 
@@ -192,6 +209,136 @@ std::ostream& operator<<(std::ostream& os, const InputFormats& f) {
     return os;
 }
 
+/* enumeration of components */
+
+
+enum class ImageComponents {
+    RGB,
+    YCbCr
+};
+
+std::istream& operator>>(std::istream& is, ImageComponents& f) {
+
+    std::string s;
+
+    is >> s;
+
+    if (s == "RGB") {
+        f = ImageComponents::RGB;
+    } else if (s == "YCbCr") {
+        f = ImageComponents::YCbCr;
+    } else {
+        throw std::runtime_error("Unknown image components");
+    }
+
+    return is;
+}
+
+
+std::ostream& operator<<(std::ostream& os, const ImageComponents& f) {
+
+    switch (f) {
+    case ImageComponents::RGB:
+        os << "RGB";
+        break;
+    case ImageComponents::YCbCr:
+        os << "YCbCr";
+        break;
+    }
+
+    return os;
+}
+
+/* enumeration of supported colorimetry */
+
+class EnumeratedColorimetry {
+public:
+
+    /* defined colorimetry values */
+
+    static const EnumeratedColorimetry COLOR_1;
+    static const EnumeratedColorimetry COLOR_2;
+    static const EnumeratedColorimetry COLOR_3;
+    static const EnumeratedColorimetry COLOR_4;
+    static const EnumeratedColorimetry COLOR_5;
+    static const EnumeratedColorimetry COLOR_6;
+    static const EnumeratedColorimetry COLOR_7;
+    static const EnumeratedColorimetry COLOR_APP4_2;
+
+    static const EnumeratedColorimetry& fromString(const std::string s) {
+
+        auto i = EnumeratedColorimetry::colors_.find(s);
+
+        if (i == EnumeratedColorimetry::colors_.cend()) {
+            throw std::runtime_error("Unknown colorimetry");
+        }
+
+        return *(i->second);
+    }
+
+    static std::string usage() {
+        std::stringstream ss;
+
+        ss << "Colorspace:" << std::endl;
+
+        for (auto pair : EnumeratedColorimetry::colors_) {
+            ss << pair.first << std::endl;
+        }
+
+        return ss.str();
+    }
+
+    const std::string& symbol() const {
+        return this->symbol_;
+    }
+
+    const std::array<uint8_t, 16>& transfer_characteristic() const {
+        return this->transfer_characteristic_;
+    }
+
+    const std::array<uint8_t, 16>& color_primaries() const {
+        return this->color_primaries_;
+    }
+
+    const std::array<uint8_t, 16>& coding_equations() const {
+        return this->coding_equations_;
+    }
+
+
+private:
+
+    EnumeratedColorimetry(const std::string& symbol,
+        const std::array<uint8_t, 16> &transfer_characteristic,
+        const std::array<uint8_t, 16> &color_primaries,
+        const std::array<uint8_t, 16> &coding_equations) :
+        symbol_(symbol),
+        transfer_characteristic_(transfer_characteristic),
+        color_primaries_(color_primaries),
+        coding_equations_(coding_equations)
+    {
+        if (!this->colors_.insert(std::make_pair(this->symbol_, this)).second) {
+            throw std::runtime_error("Existing colorimetry");
+        }
+    }
+
+    static std::map<std::string, EnumeratedColorimetry*> colors_;
+
+    std::string symbol_;
+
+    std::array<uint8_t, 16> transfer_characteristic_;
+    std::array<uint8_t, 16> color_primaries_;
+    std::array<uint8_t, 16> coding_equations_;
+};
+
+std::map<std::string, EnumeratedColorimetry*> EnumeratedColorimetry::colors_;
+const EnumeratedColorimetry EnumeratedColorimetry::COLOR_1("COLOR.1", TransferCharacteristic_ITU709, ColorPrimaries_ITU470_PAL, CodingEquations_ITU601);
+const EnumeratedColorimetry EnumeratedColorimetry::COLOR_2("COLOR.2", TransferCharacteristic_ITU709, ColorPrimaries_SMPTE170M, CodingEquations_ITU601);
+const EnumeratedColorimetry EnumeratedColorimetry::COLOR_3("COLOR.3", TransferCharacteristic_ITU709, ColorPrimaries_ITU709, CodingEquations_ITU709);
+const EnumeratedColorimetry EnumeratedColorimetry::COLOR_4("COLOR.4", TransferCharacteristic_IEC6196624_xvYCC, ColorPrimaries_SMPTE170M, CodingEquations_ITU601);
+const EnumeratedColorimetry EnumeratedColorimetry::COLOR_5("COLOR.5", TransferCharacteristic_ITU2020, ColorPrimaries_ITU2020, CodingEquations_ITU2020_NCL);
+const EnumeratedColorimetry EnumeratedColorimetry::COLOR_6("COLOR.6", TransferCharacteristic_SMPTEST2084, ColorPrimaries_P3D65, CodingEquations_ITU2020_NCL /* not used */);
+const EnumeratedColorimetry EnumeratedColorimetry::COLOR_7("COLOR.7", TransferCharacteristic_SMPTEST2084, ColorPrimaries_ITU2020, CodingEquations_ITU2020_NCL);
+const EnumeratedColorimetry EnumeratedColorimetry::COLOR_APP4_2("COLOR.APP4.2", TransferCharacteristic_CinemaMezzanine_DCDM, ColorPrimaries_CinemaMezzanine, CodingEquations_ITU2020_NCL /* not used */);
 
 int main(int argc, const char* argv[]) {
 
@@ -199,16 +346,20 @@ int main(int argc, const char* argv[]) {
 
     /* initialize command line options */
 
-    boost::program_options::options_description cli_opts{ "Options" };
+    boost::program_options::options_description cli_opts{ "Wraps JPEG 2000 codestreams (RGB only) into IMF Image Track File" };
 
     cli_opts.add_options()
-        ("help", "produce help message")
-        ("fps", boost::program_options::value<ASDCP::Rational>()->default_value(ASDCP::EditRate_24), "Edit rate, e.g. 24/1")
-        ("format", boost::program_options::value<InputFormats>()->default_value(InputFormats::J2C), "Input file format (MJC or J2C)")
+        ("help", "Prints usage")
+        ("fps", boost::program_options::value<ASDCP::Rational>()->default_value(ASDCP::EditRate_24), "Edit rate in the form of <numerator> '/' <denominator>, e.g. 24/1")
+        ("format", boost::program_options::value<InputFormats>()->default_value(InputFormats::J2C), "Input codestream format\n"
+            "  MJC: \t16-byte header followed by a sequence of J2C codestreams, each preceded by a 4-byte little-endian length\n"
+            "  J2C: \tsingle JPEG 2000 codestream")
         ("assetid", boost::program_options::value<Kumu::UUID>(), "Asset UUID in hex notation, e.g. 8538b543169743dd9a08c6d8b4b1b7df")
         ("out", boost::program_options::value<std::string>()->required(), "Output file path")
         ("fake", boost::program_options::bool_switch()->default_value(false), "Generate fake input data")
-        ("in", boost::program_options::value<std::string>(), "Input file path (or stdin if none is specified)");
+        ("in", boost::program_options::value<std::string>(), "Input file path (or stdin if none is specified)")
+        ("color", boost::program_options::value<std::string>()->default_value(EnumeratedColorimetry::COLOR_APP4_2.symbol()), EnumeratedColorimetry::usage().c_str())
+        ("components", boost::program_options::value<ImageComponents>()->default_value(ImageComponents::RGB), "Image components: RGB or YCbCr");
 
     boost::program_options::variables_map cli_args;
 
@@ -370,13 +521,23 @@ int main(int argc, const char* argv[]) {
                     throw std::runtime_error(result.Message());
                 }
 
+                /* support only RGB today */
+
+                if (cli_args["components"].as<ImageComponents>() == ImageComponents::YCbCr ||
+                    pdesc.ImageComponents[1].YRsize == 2 ||
+                    pdesc.ImageComponents[2].YRsize == 2 ) {
+
+                    throw std::runtime_error("Only RGB images are supported in this version");
+
+                }
+
                 /* determine Picture Essence Coding Label */
 
                 if (pdesc.ExtendedCapabilities.Pcap & 0x00020000) {
 
                     /* Part 15 codestream */
 
-                    rgba_desc->PictureEssenceCoding = HTJ2KPICTURECODINGSCHEMEGENERIC_UL;
+                    rgba_desc->PictureEssenceCoding = HTJ2KPictureCodingSchemeGeneric.data();
 
                 } else {
 
@@ -388,9 +549,12 @@ int main(int argc, const char* argv[]) {
 
                         /* It is an IMF profile */
 
-                        uint8_t ul[16] = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x02, 0x02, 0x03, 0x01, static_cast<uint8_t>(ul_bytes->second.first), static_cast<uint8_t>(ul_bytes->second.second) };
+                        std::array<uint8_t, 16> ul = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x02, 0x02, 0x03, 0x01, 0x00 /* placeholder*/, 0x00 /* placeholder*/ };
 
-                        rgba_desc->PictureEssenceCoding = ul;
+                        ul[14] = static_cast<uint8_t>(ul_bytes->second.first);
+                        ul[15] = static_cast<uint8_t>(ul_bytes->second.second);
+
+                        rgba_desc->PictureEssenceCoding = ul.data();
 
                     } else {
 
@@ -400,8 +564,12 @@ int main(int argc, const char* argv[]) {
 
                 }
 
-                rgba_desc->TransferCharacteristic = TRANSFERCHARACTERISTIC_CINEMAMEZZANINEDCDM_UL;
-                rgba_desc->ColorPrimaries = COLORPRIMARIES_CINEMAMEZZANINE_UL;
+                /* get the color information */
+
+                const EnumeratedColorimetry &color = EnumeratedColorimetry::fromString(cli_args["color"].as<std::string>());
+
+                rgba_desc->TransferCharacteristic = color.transfer_characteristic().data();
+                rgba_desc->ColorPrimaries = color.color_primaries().data();
                 rgba_desc->ComponentMaxRef = (2 << pdesc.ImageComponents->Ssize) - 1;
                 rgba_desc->ComponentMinRef = 0;
                 rgba_desc->VideoLineMap = ASDCP::MXF::LineMapPair(0, 0);
