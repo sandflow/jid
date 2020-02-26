@@ -13,7 +13,7 @@ Wraps JPEG 2000 codestreams into an Image Track File as specified in ST 2067-40
 
 ## Known limitations
 
-* Supported image characteristics: DCDM XYZ @ 4:4:4
+* Supported image characteristics: DCDM XYZ @ 4:4:4, App 2 and 2E (no interlaced)
 * Supported input formats: MJC codestream sequence and J2C single codestream
 
 ## Examples uses

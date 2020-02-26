@@ -529,15 +529,15 @@ f_in = freopen(NULL, "rb", stdin);
 
                     yuv_desc->VerticalSubsampling = 1;
 
-                    yuv_desc->ComponentDepth = pdesc.ImageComponents->Ssize;
+                    yuv_desc->ComponentDepth = pdesc.ImageComponents->Ssize + 1;
 
                     yuv_desc->ColorSiting = 0;
 
-                    yuv_desc->WhiteReflevel = (1 << pdesc.ImageComponents->Ssize) - 21 * (1 << (pdesc.ImageComponents->Ssize - 8)); /* 2^A1 - 21*2^A1/2^8 */
+                    yuv_desc->WhiteReflevel = (2 << pdesc.ImageComponents->Ssize) - 21 * (2 << (pdesc.ImageComponents->Ssize - 8)); /* 2^A1 - 21*2^A1/2^8 */
 
-                    yuv_desc->BlackRefLevel = 1 << (pdesc.ImageComponents->Ssize - 4);
+                    yuv_desc->BlackRefLevel = 2 << (pdesc.ImageComponents->Ssize - 4);
 
-                    yuv_desc->ColorRange = (1 << pdesc.ImageComponents->Ssize) - (1 << (pdesc.ImageComponents->Ssize - 3)) + 1; /* 2^A1 - 2^A1/2^3 + 1 */
+                    yuv_desc->ColorRange = (2 << pdesc.ImageComponents->Ssize) - (2 << (pdesc.ImageComponents->Ssize - 3)) + 1; /* 2^A1 - 2^A1/2^3 + 1 */
 
                     desc = yuv_desc;
 
