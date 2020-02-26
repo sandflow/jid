@@ -351,6 +351,7 @@ int main(int argc, const char* argv[]) {
     cli_opts.add_options()
         ("help", "Prints usage")
         ("fps", boost::program_options::value<ASDCP::Rational>()->default_value(ASDCP::EditRate_24), "Edit rate in the form of <numerator> '/' <denominator>, e.g. 24/1")
+        ("aspect_ratio", boost::program_options::value<ASDCP::Rational>(), "Aspect ratio in the form of <numerator> '/' <denominator>, e.g. 16/9")
         ("format", boost::program_options::value<InputFormats>()->default_value(InputFormats::J2C), "Input codestream format\n"
             "  MJC: \t16-byte header followed by a sequence of J2C codestreams, each preceded by a 4-byte little-endian length\n"
             "  J2C: \tsingle JPEG 2000 codestream")
@@ -402,21 +403,21 @@ int main(int argc, const char* argv[]) {
 
                 int mode = _setmode(_fileno(stdin), O_BINARY);
 
-                if (mode == -1) {
-                    throw std::runtime_error("Cannot reopne stdout");
-                }
+if (mode == -1) {
+    throw std::runtime_error("Cannot reopne stdout");
+}
 
-                f_in = stdin;
+f_in = stdin;
 
 #else
 
-                f_in = freopen(NULL, "rb", stdin);
+f_in = freopen(NULL, "rb", stdin);
 
 #endif
 
             } else {
 
-                f_in = fopen(cli_args["in"].as<std::string>().c_str(), "rb");
+            f_in = fopen(cli_args["in"].as<std::string>().c_str(), "rb");
 
             }
 
@@ -454,10 +455,10 @@ int main(int argc, const char* argv[]) {
 
         if (cli_args.count("assetid")) {
 
-            const Kumu::UUID& uuid  = cli_args["assetid"].as<ASDCP::UUID>();
-            
+            const Kumu::UUID& uuid = cli_args["assetid"].as<ASDCP::UUID>();
+
             memcpy(writer_info.AssetUUID, uuid.Value(), uuid.Size());
-        
+
         } else {
 
             Kumu::GenRandomUUID(writer_info.AssetUUID);
@@ -494,41 +495,83 @@ int main(int argc, const char* argv[]) {
 
             if (frame_count == 0) {
 
-                /* initialize the essence descriptor */
+                /* initialize the J2K subdescriptor */
 
-                ASDCP::MXF::InterchangeObject_list_t essence_sub_descriptors;
+                ASDCP::MXF::JPEG2000PictureSubDescriptor *j2k_subdesc = new ASDCP::MXF::JPEG2000PictureSubDescriptor(g_dict);
 
-                ASDCP::MXF::RGBAEssenceDescriptor* rgba_desc = new ASDCP::MXF::RGBAEssenceDescriptor(g_dict);
-
-                essence_sub_descriptors.push_back(new ASDCP::MXF::JPEG2000PictureSubDescriptor(g_dict));
-
+                
                 /* set J2CLayout */
 
                 const byte_t PIXELLAYOUT_XYZ[ASDCP::MXF::RGBAValueLength] = { 0xd8, 0x0c, 0xd9, 0x0c, 0xda, 0x0c, 0x00 };
 
-                static_cast<ASDCP::MXF::JPEG2000PictureSubDescriptor*>(essence_sub_descriptors.back())->J2CLayout.set(PIXELLAYOUT_XYZ);
+                j2k_subdesc->J2CLayout.set(PIXELLAYOUT_XYZ);
+
+                /* build the essence descriptor */
+
+                ASDCP::MXF::GenericPictureEssenceDescriptor* desc = NULL;
+
+                const EnumeratedColorimetry& color = EnumeratedColorimetry::fromString(cli_args["color"].as<std::string>());
+
+                if (cli_args["components"].as<ImageComponents>() == ImageComponents::YCbCr) {
+
+                    /* YCbCr image */
+
+                    if (pdesc.ImageComponents[1].YRsize != pdesc.ImageComponents[2].YRsize) {
+
+                        throw std::runtime_error("Inconsistent subsampling");
+                    }
+
+                    ASDCP::MXF::CDCIEssenceDescriptor *yuv_desc = new ASDCP::MXF::CDCIEssenceDescriptor(g_dict);
+
+                    yuv_desc->CodingEquations = color.coding_equations().data();
+
+                    yuv_desc->HorizontalSubsampling = pdesc.ImageComponents[1].YRsize;
+
+                    yuv_desc->VerticalSubsampling = 1;
+
+                    yuv_desc->ComponentDepth = pdesc.ImageComponents->Ssize;
+
+                    yuv_desc->ColorSiting = 0;
+
+                    yuv_desc->WhiteReflevel = (1 << pdesc.ImageComponents->Ssize) - 21 * (1 << (pdesc.ImageComponents->Ssize - 8)); /* 2^A1 - 21*2^A1/2^8 */
+
+                    yuv_desc->BlackRefLevel = 1 << (pdesc.ImageComponents->Ssize - 4);
+
+                    yuv_desc->ColorRange = (1 << pdesc.ImageComponents->Ssize) - (1 << (pdesc.ImageComponents->Ssize - 3)) + 1; /* 2^A1 - 2^A1/2^3 + 1 */
+
+                    desc = yuv_desc;
+
+                } else {
+
+                    /* RGB image */
+
+                    ASDCP::MXF::RGBAEssenceDescriptor *rgba_desc = new ASDCP::MXF::RGBAEssenceDescriptor(g_dict);
+
+                    if (pdesc.ImageComponents[1].YRsize == 2 || pdesc.ImageComponents[2].YRsize == 2) {
+
+                        throw std::runtime_error("Components are sub-sampled but RGB images have been requested");
+
+                    }
+
+                    rgba_desc->ComponentMaxRef = (2 << pdesc.ImageComponents->Ssize) - 1;
+                    rgba_desc->ComponentMinRef = 0;
+
+
+                    desc = rgba_desc;
+
+                }
 
                 /* fill the essence descriptor */
 
                 result = ASDCP::JP2K_PDesc_to_MD(
                     pdesc,
                     *g_dict,
-                    *static_cast<ASDCP::MXF::GenericPictureEssenceDescriptor*>(rgba_desc),
-                    *static_cast<ASDCP::MXF::JPEG2000PictureSubDescriptor*>(essence_sub_descriptors.back())
+                    *desc,
+                    *j2k_subdesc
                 );
 
                 if (ASDCP_FAILURE(result)) {
                     throw std::runtime_error(result.Message());
-                }
-
-                /* support only RGB today */
-
-                if (cli_args["components"].as<ImageComponents>() == ImageComponents::YCbCr ||
-                    pdesc.ImageComponents[1].YRsize == 2 ||
-                    pdesc.ImageComponents[2].YRsize == 2 ) {
-
-                    throw std::runtime_error("Only RGB images are supported in this version");
-
                 }
 
                 /* determine Picture Essence Coding Label */
@@ -537,7 +580,7 @@ int main(int argc, const char* argv[]) {
 
                     /* Part 15 codestream */
 
-                    rgba_desc->PictureEssenceCoding = HTJ2KPictureCodingSchemeGeneric.data();
+                    desc->PictureEssenceCoding = HTJ2KPictureCodingSchemeGeneric.data();
 
                 } else {
 
@@ -554,7 +597,7 @@ int main(int argc, const char* argv[]) {
                         ul[14] = static_cast<uint8_t>(ul_bytes->second.first);
                         ul[15] = static_cast<uint8_t>(ul_bytes->second.second);
 
-                        rgba_desc->PictureEssenceCoding = ul.data();
+                        desc->PictureEssenceCoding = ul.data();
 
                     } else {
 
@@ -564,25 +607,31 @@ int main(int argc, const char* argv[]) {
 
                 }
 
-                /* get the color information */
+                /* fill-in remaining common essence descriptor fields */
 
-                const EnumeratedColorimetry &color = EnumeratedColorimetry::fromString(cli_args["color"].as<std::string>());
+                desc->TransferCharacteristic = color.transfer_characteristic().data();
 
-                rgba_desc->TransferCharacteristic = color.transfer_characteristic().data();
-                rgba_desc->ColorPrimaries = color.color_primaries().data();
-                rgba_desc->ComponentMaxRef = (2 << pdesc.ImageComponents->Ssize) - 1;
-                rgba_desc->ComponentMinRef = 0;
-                rgba_desc->VideoLineMap = ASDCP::MXF::LineMapPair(0, 0);
+                desc->ColorPrimaries = color.color_primaries().data();
 
+                desc->VideoLineMap = ASDCP::MXF::LineMapPair(0, 0);
+             
                 /* we do not know the container duration */
 
-                rgba_desc->ContainerDuration.empty();
+                desc->ContainerDuration.empty();
 
-                ASDCP::MXF::FileDescriptor* essence_descriptor = static_cast<ASDCP::MXF::FileDescriptor*>(rgba_desc);
+                ASDCP::MXF::FileDescriptor* essence_descriptor = static_cast<ASDCP::MXF::FileDescriptor*>(desc);
 
                 if (ASDCP_FAILURE(result)) {
                     throw std::runtime_error(result.Message());
                 }
+
+                /* initialize the sub-descriptor container */
+
+                ASDCP::MXF::InterchangeObject_list_t essence_sub_descriptors;
+
+                essence_sub_descriptors.push_back(j2k_subdesc);
+
+                /* initialize the MXF file */
 
                 result = writer.OpenWrite(
                     cli_args["out"].as<std::string>(),
