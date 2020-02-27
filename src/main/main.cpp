@@ -391,7 +391,7 @@ int main(int argc, const char* argv[]) {
 
     /* initialize command line options */
 
-    boost::program_options::options_description cli_opts{ "Wraps JPEG 2000 codestreams (RGB only) into IMF Image Track File" };
+    boost::program_options::options_description cli_opts{ "Wraps JPEG 2000 codestreams into IMF Image Track File" };
 
     cli_opts.add_options()
         ("help", "Prints usage")
@@ -450,7 +450,7 @@ int main(int argc, const char* argv[]) {
                 int mode = _setmode(_fileno(stdin), O_BINARY);
 
 if (mode == -1) {
-    throw std::runtime_error("Cannot reopne stdout");
+    throw std::runtime_error("Cannot reopen stdout");
 }
 
 f_in = stdin;
