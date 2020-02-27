@@ -67,7 +67,7 @@ std::array<uint8_t, 16> CodingEquations_ITU601 = { 0x06, 0x0e, 0x2b, 0x34, 0x04,
 std::array<uint8_t, 16> CodingEquations_ITU709 = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x04, 0x01, 0x01, 0x01, 0x02, 0x02, 0x00, 0x00 };
 std::array<uint8_t, 16> CodingEquations_ITU2020_NCL = { 0x06, 0x0e, 0x2b, 0x34, 04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x02, 0x06, 0x00, 0x00 };
 
-std::array<uint8_t, 16> TransferCharacteristic_ITU709 = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x01, 0x08, 0x00, 0x00 };
+std::array<uint8_t, 16> TransferCharacteristic_ITU709 = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x04, 0x01, 0x01, 0x01, 0x01, 0x02, 0x00, 0x00 };
 std::array<uint8_t, 16> TransferCharacteristic_IEC6196624_xvYCC = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x01, 0x08, 0x00, 0x00 };
 std::array<uint8_t, 16> TransferCharacteristic_ITU2020 = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0e, 0x04, 0x01, 0x01, 0x01, 0x01, 0x09, 0x00, 0x00 };
 std::array<uint8_t, 16> TransferCharacteristic_SMPTEST2084 = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x01, 0x0a, 0x00, 0x00 };
@@ -209,12 +209,52 @@ std::ostream& operator<<(std::ostream& os, const InputFormats& f) {
     return os;
 }
 
-/* enumeration of components */
+/* quantization */
 
+
+enum class Quantization {
+    QE_2,
+    QE_1
+};
+
+std::istream& operator>>(std::istream& is, Quantization& q) {
+
+    std::string s;
+
+    is >> s;
+
+    if (s == "QE.1") {
+        q = Quantization::QE_1;
+    } else if (s == "QE.2") {
+        q = Quantization::QE_2;
+    } else {
+        throw std::runtime_error("Unknown quantization");
+    }
+
+    return is;
+}
+
+
+std::ostream& operator<<(std::ostream& os, const Quantization& q) {
+
+    switch (q) {
+    case Quantization::QE_2:
+        os << "QE.2";
+        break;
+    case Quantization::QE_1:
+        os << "QE.1";
+        break;
+    }
+
+    return os;
+}
+
+/* enumeration of components */
 
 enum class ImageComponents {
     RGB,
-    YCbCr
+    YCbCr,
+    XYZ
 };
 
 std::istream& operator>>(std::istream& is, ImageComponents& f) {
@@ -227,6 +267,8 @@ std::istream& operator>>(std::istream& is, ImageComponents& f) {
         f = ImageComponents::RGB;
     } else if (s == "YCbCr") {
         f = ImageComponents::YCbCr;
+    } else if (s == "XYZ") {
+        f = ImageComponents::XYZ;
     } else {
         throw std::runtime_error("Unknown image components");
     }
@@ -243,6 +285,9 @@ std::ostream& operator<<(std::ostream& os, const ImageComponents& f) {
         break;
     case ImageComponents::YCbCr:
         os << "YCbCr";
+        break;
+    case ImageComponents::XYZ:
+        os << "XYZ";
         break;
     }
 
@@ -360,7 +405,8 @@ int main(int argc, const char* argv[]) {
         ("fake", boost::program_options::bool_switch()->default_value(false), "Generate fake input data")
         ("in", boost::program_options::value<std::string>(), "Input file path (or stdin if none is specified)")
         ("color", boost::program_options::value<std::string>()->default_value(EnumeratedColorimetry::COLOR_APP4_2.symbol()), EnumeratedColorimetry::usage().c_str())
-        ("components", boost::program_options::value<ImageComponents>()->default_value(ImageComponents::RGB), "Image components: RGB or YCbCr");
+        ("components", boost::program_options::value<ImageComponents>()->default_value(ImageComponents::XYZ), "Image components: RGB or YCbCr or XYZ")
+        ("quantization", boost::program_options::value<Quantization>()->default_value(Quantization::QE_2), "Quantization: QE.1 or QE.2");
 
     boost::program_options::variables_map cli_args;
 
@@ -495,23 +541,30 @@ f_in = freopen(NULL, "rb", stdin);
 
             if (frame_count == 0) {
 
-                /* initialize the J2K subdescriptor */
-
-                ASDCP::MXF::JPEG2000PictureSubDescriptor *j2k_subdesc = new ASDCP::MXF::JPEG2000PictureSubDescriptor(g_dict);
-
-                
-                /* set J2CLayout */
-
-                const byte_t PIXELLAYOUT_XYZ[ASDCP::MXF::RGBAValueLength] = { 0xd8, 0x0c, 0xd9, 0x0c, 0xda, 0x0c, 0x00 };
-
-                j2k_subdesc->J2CLayout.set(PIXELLAYOUT_XYZ);
-
                 /* build the essence descriptor */
 
                 ASDCP::MXF::GenericPictureEssenceDescriptor* desc = NULL;
 
+                /* initialize the J2K subdescriptor */
+
+                ASDCP::MXF::JPEG2000PictureSubDescriptor *j2k_subdesc = new ASDCP::MXF::JPEG2000PictureSubDescriptor(g_dict);
+                                
+                /* determine pixel depth from the first component */
+
+                if (!(pdesc.ImageComponents[0].Ssize == pdesc.ImageComponents[1].Ssize && pdesc.ImageComponents[1].Ssize == pdesc.ImageComponents[2].Ssize)) {
+                    throw std::runtime_error("Not all components have equal pixel depth");
+                }
+
+                uint8_t pixel_depth = pdesc.ImageComponents[0].Ssize + 1;
+
+                /* determine the color scheme */
+
                 const EnumeratedColorimetry& color = EnumeratedColorimetry::fromString(cli_args["color"].as<std::string>());
 
+                /* J2CLayout depends on the image components */
+
+                std::array<uint8_t, ASDCP::MXF::RGBAValueLength> j2c_layout;
+           
                 if (cli_args["components"].as<ImageComponents>() == ImageComponents::YCbCr) {
 
                     /* YCbCr image */
@@ -520,6 +573,18 @@ f_in = freopen(NULL, "rb", stdin);
 
                         throw std::runtime_error("Inconsistent subsampling");
                     }
+
+                    if (cli_args["quantization"].as<Quantization>() != Quantization::QE_1) {
+
+                        throw std::runtime_error("Quantization must be QE.1 for YCbCr images");
+
+                    }
+
+                    /* compute the J2C Layout */
+
+                    j2c_layout = { 0x59, pixel_depth, 0x55, pixel_depth, 0x56, pixel_depth, 0x00 };
+
+                    /* build the CDCI descriptor */
 
                     ASDCP::MXF::CDCIEssenceDescriptor *yuv_desc = new ASDCP::MXF::CDCIEssenceDescriptor(g_dict);
 
@@ -553,13 +618,37 @@ f_in = freopen(NULL, "rb", stdin);
 
                     }
 
-                    rgba_desc->ComponentMaxRef = (2 << pdesc.ImageComponents->Ssize) - 1;
-                    rgba_desc->ComponentMinRef = 0;
+                    if (cli_args["quantization"].as<Quantization>() == Quantization::QE_1) {
 
+                        rgba_desc->ComponentMaxRef = (2 << pdesc.ImageComponents->Ssize) - 21 * (2 << (pdesc.ImageComponents->Ssize - 8));
+                        rgba_desc->ComponentMinRef = 2 << (pdesc.ImageComponents->Ssize - 4);
+
+                    } else {
+
+                        rgba_desc->ComponentMaxRef = (2 << pdesc.ImageComponents->Ssize) - 1;
+                        rgba_desc->ComponentMinRef = 0;
+
+                    }
+                    
+                    /* compute the J2C Layout */
+
+                    if (cli_args["components"].as<ImageComponents>() == ImageComponents::XYZ) {
+
+                        j2c_layout = { 0xd8, pixel_depth, 0xd9, pixel_depth, 0xda, pixel_depth, 0x00 };
+
+                    } else {
+
+                        j2c_layout = { 0x52, pixel_depth, 0x47, pixel_depth, 0x42, pixel_depth, 0x00 };
+
+                    }
 
                     desc = rgba_desc;
 
                 }
+
+                /* set the J2CLayout */
+
+                j2k_subdesc->J2CLayout.set(j2c_layout.data());
 
                 /* fill the essence descriptor */
 
