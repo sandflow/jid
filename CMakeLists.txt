@@ -40,6 +40,9 @@ add_test(NAME "part1-mjc-wrapping" COMMAND ${PROJECT_NAME} --in "${PROJECT_SOURC
 
 add_test(NAME "part15-mjc-wrapping" COMMAND ${PROJECT_NAME} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part15.mjc" --format MJC --out part15-mjc.mxf)
 
+add_test(NAME "yuv422_10b_p15-wrapping" COMMAND ${PROJECT_NAME} --color COLOR.3 --quantization QE.1 --components YCbCr --format J2C  --in "${PROJECT_SOURCE_DIR}/src/test/resources/yuv422_10b_p15.j2c" --out yuv422_10b_p15.mxf)
+
+
 
 # compiler settings
 

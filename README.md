@@ -2,7 +2,7 @@
 
 _THIS IS EXPERIMENTAL SOFTWARE_
 
-Wraps JPEG 2000 codestreams into an Image Track File as specified in ST 2067-40
+Wraps JPEG 2000 codestreams into an Image Track File as specified in SMPTE ST 2067-21 (App 2E) and (proposed) SMPTE ST 2067-40 (App 4)
 
 ## Prerequisites
 
@@ -13,7 +13,7 @@ Wraps JPEG 2000 codestreams into an Image Track File as specified in ST 2067-40
 
 ## Known limitations
 
-* Supported image characteristics: DCDM XYZ @ 4:4:4
+* Does not support interlaced images
 * Supported input formats: MJC codestream sequence and J2C single codestream
 
 ## Examples uses
