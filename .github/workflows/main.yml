@@ -1,0 +1,37 @@
+name: build and test
+
+on: push
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: install dependencies
+      run: |
+        apt-get install libboost-all-dev
+        apt-get install libxerces-c-dev
+        apt-get install libssl-dev
+        apt-get install cmake
+        
+    - name: checkout repo
+      uses: actions/checkout@v2
+
+    - name: checkout submodules
+      run: git pull --recurse-submodules
+
+    - name: cmake initialization
+      run: |
+        mkdir build
+        cd build
+        cmake ..
+        
+    - name: build
+      run: |
+        cd build
+        make
+    
+    - name: test
+      run: |
+        cd build
+        ctest
