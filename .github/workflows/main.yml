@@ -9,10 +9,10 @@ jobs:
     steps:
     - name: install dependencies
       run: |
-        apt-get install libboost-all-dev
-        apt-get install libxerces-c-dev
-        apt-get install libssl-dev
-        apt-get install cmake
+        sudo apt-get install libboost-all-dev
+        sudo apt-get install libxerces-c-dev
+        sudo apt-get install libssl-dev
+        sudo apt-get install cmake
         
     - name: checkout repo
       uses: actions/checkout@v2
