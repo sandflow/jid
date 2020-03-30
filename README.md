@@ -98,15 +98,15 @@ ctest
 
 ## Microsoft Visual Studio build instructions (MSVC)
 
-* install OpenSSL binaries from https://slproweb.com/products/Win32OpenSSL.html
+* install OpenSSL v1.0.2u binaries from https://slproweb.com/products/Win32OpenSSL.html
 * install boost binaries from
 https://sourceforge.net/projects/boost/files/boost-binaries/1.72.0/
 * download xerces c++ from http://xerces.apache.org/mirrors.cgi and
 build using MSVC
-* configure and generate an MSVC project using CMake GUI, setting:
-  * Boost_INCLUDE_DIR
-  * XercescppLib_PATH
-  * XercescppLib_Debug_PATH
-  * XercescppLib_include_DIR
-  * OpenSSLLib_PATH
-  * OpenSSLLib_include_DIR
+* configure and generate an MSVC project using [CMake GUI](https://cmake.org/runningcmake/), setting:
+  * `Boost_INCLUDE_DIR`, e.g. `"C:/bin/boost_1_72_0"`
+  * `XercescppLib_PATH`, e.g. `"C:/bin/xerces-c/lib/xerces-c_3.lib"`
+  * `XercescppLib_Debug_PATH`, e.g. `"C:/bin/xerces-c/lib/xerces-c_3D.lib"`
+  * `XercescppLib_include_DIR`, e.g. `"C:/bin/xerces-c/include"`
+  * `OpenSSLLib_PATH`, e.g. `"C:/bin/OpenSSL-Win64/lib/libeay32.lib"`
+  * `OpenSSLLib_include_DIR`, e.g. `"C:/bin/OpenSSL-Win64/include"`
