@@ -28,6 +28,7 @@
 #define COM_SANDFLOW_CODESTREAMSEQUENCE_H
 
 #include <vector>
+#include <list>
 #include <AS_DCP.h>
 
 class CodestreamSequence {
@@ -48,6 +49,10 @@ public:
         std::vector<uint8_t>::size_type initial_buf_sz = 50 * 1024 * 1024,
         std::vector<uint8_t>::size_type read_buf_sz = 64 * 1024);
 
+    J2CFile(const std::vector<std::string>& file_paths,
+        std::vector<uint8_t>::size_type initial_buf_sz = 50 * 1024 * 1024,
+        std::vector<uint8_t>::size_type read_buf_sz = 64 * 1024);
+
     virtual void next();
 
     virtual bool good() const;
@@ -58,7 +63,11 @@ protected:
 
     bool good_;
     std::vector<uint8_t> codestream_;
+    std::vector<std::string> file_paths_stack_;
+    std::vector<uint8_t>::size_type initial_buf_sz_;
+    std::vector<uint8_t>::size_type read_buf_sz_;
 
+    void _fill_from_fp(FILE* fp);
 };
 
 class MJCFile : public CodestreamSequence {
