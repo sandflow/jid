@@ -45,7 +45,7 @@
 #include <stdio.h>
 #endif
 
-/* authoring identification info written to file headers */
+ /* authoring identification info written to file headers */
 
 class DCDM2IMFWriterInfo : public ASDCP::WriterInfo {
 public:
@@ -353,14 +353,13 @@ public:
 private:
 
     EnumeratedColorimetry(const std::string& symbol,
-        const std::array<uint8_t, 16> &transfer_characteristic,
-        const std::array<uint8_t, 16> &color_primaries,
-        const std::array<uint8_t, 16> &coding_equations) :
+        const std::array<uint8_t, 16>& transfer_characteristic,
+        const std::array<uint8_t, 16>& color_primaries,
+        const std::array<uint8_t, 16>& coding_equations) :
         symbol_(symbol),
         transfer_characteristic_(transfer_characteristic),
         color_primaries_(color_primaries),
-        coding_equations_(coding_equations)
-    {
+        coding_equations_(coding_equations) {
         if (!this->colors_.insert(std::make_pair(this->symbol_, this)).second) {
             throw std::runtime_error("Existing colorimetry");
         }
@@ -400,7 +399,7 @@ int main(int argc, const char* argv[]) {
         ("format", boost::program_options::value<InputFormats>()->default_value(InputFormats::J2C), "Input codestream format\n"
             "  MJC: \t16-byte header followed by a sequence of J2C codestreams, each preceded by a 4-byte little-endian length\n"
             "  J2C: \tsingle JPEG 2000 codestream")
-        ("assetid", boost::program_options::value<Kumu::UUID>(), "Asset UUID in hex notation, e.g. 8538b543169743dd9a08c6d8b4b1b7df")
+            ("assetid", boost::program_options::value<Kumu::UUID>(), "Asset UUID in hex notation, e.g. 8538b543169743dd9a08c6d8b4b1b7df")
         ("out", boost::program_options::value<std::string>()->required(), "Output file path")
         ("fake", boost::program_options::bool_switch()->default_value(false), "Generate fake input data")
         ("in", boost::program_options::value<std::string>(), "Input file path (or stdin if none is specified)")
@@ -449,39 +448,100 @@ int main(int argc, const char* argv[]) {
 
                 int mode = _setmode(_fileno(stdin), O_BINARY);
 
-if (mode == -1) {
-    throw std::runtime_error("Cannot reopen stdout");
-}
+                if (mode == -1) {
+                    throw std::runtime_error("Cannot reopen stdout");
+                }
 
-f_in = stdin;
+                f_in = stdin;
 
 #else
 
-f_in = freopen(NULL, "rb", stdin);
+                f_in = freopen(NULL, "rb", stdin);
+
+                if (!f_in) {
+                    throw std::runtime_error("Cannot reopen stdout");
+                }
 
 #endif
+                switch (cli_args["format"].as<InputFormats>()) {
+
+                case InputFormats::J2C:
+                    seq.reset(new J2CFile(f_in));
+                    break;
+
+                case InputFormats::MJC:
+                    seq.reset(new MJCFile(f_in));
+                    break;
+
+                }
+
 
             } else {
 
-            f_in = fopen(cli_args["in"].as<std::string>().c_str(), "rb");
+                switch (cli_args["format"].as<InputFormats>()) {
 
-            }
+                case InputFormats::J2C:
 
-            if (!f_in) {
-                throw std::runtime_error("Cannot open input file");
-            }
+                {
 
-            switch (cli_args["format"].as<InputFormats>()) {
+                    const std::string& path = cli_args["in"].as<std::string>();
+                    std::vector<std::string> file_list;
 
-            case InputFormats::J2C:
-                seq.reset(new J2CFile(f_in));
+
+                    if (Kumu::PathIsFile(path)) {
+                    
+                        file_list.push_back(path);
+                    
+                    } else {
+                    
+                        char next_file[Kumu::MaxFilePath];
+                        Kumu::DirScanner scanner;
+
+                        result = scanner.Open(path);
+
+                        if (result.Failure()) {
+                            throw std::runtime_error("Cannot open directory");
+                        }
+
+                        while (scanner.GetNext(next_file).Success()) {
+
+                            /* skip hidden and special files */
+
+                            if (next_file[0] == '.') continue;
+
+                            std::string file_path = path + "/" + next_file;
+
+                            /* skip directories*/
+
+                            if (Kumu::PathIsDirectory(file_path)) continue;
+
+                            file_list.push_back(file_path);
+                        }
+
+                    }
+
+                    seq.reset(new J2CFile(file_list));
+                }
+
                 break;
 
-            case InputFormats::MJC:
-                seq.reset(new MJCFile(f_in));
-                break;
+                case InputFormats::MJC:
+
+                    f_in = fopen(cli_args["in"].as<std::string>().c_str(), "rb");
+
+                    if (!f_in) {
+                        throw std::runtime_error("Cannot open input file");
+                    }
+
+                    seq.reset(new MJCFile(f_in));
+
+                    break;
+
+                }
 
             }
+
+
 
         }
 
@@ -547,8 +607,8 @@ f_in = freopen(NULL, "rb", stdin);
 
                 /* initialize the J2K subdescriptor */
 
-                ASDCP::MXF::JPEG2000PictureSubDescriptor *j2k_subdesc = new ASDCP::MXF::JPEG2000PictureSubDescriptor(g_dict);
-                                
+                ASDCP::MXF::JPEG2000PictureSubDescriptor* j2k_subdesc = new ASDCP::MXF::JPEG2000PictureSubDescriptor(g_dict);
+
                 /* determine pixel depth from the first component */
 
                 if (!(pdesc.ImageComponents[0].Ssize == pdesc.ImageComponents[1].Ssize && pdesc.ImageComponents[1].Ssize == pdesc.ImageComponents[2].Ssize)) {
@@ -564,7 +624,7 @@ f_in = freopen(NULL, "rb", stdin);
                 /* J2CLayout depends on the image components */
 
                 std::array<uint8_t, ASDCP::MXF::RGBAValueLength> j2c_layout;
-           
+
                 if (cli_args["components"].as<ImageComponents>() == ImageComponents::YCbCr) {
 
                     /* YCbCr image */
@@ -586,7 +646,7 @@ f_in = freopen(NULL, "rb", stdin);
 
                     /* build the CDCI descriptor */
 
-                    ASDCP::MXF::CDCIEssenceDescriptor *yuv_desc = new ASDCP::MXF::CDCIEssenceDescriptor(g_dict);
+                    ASDCP::MXF::CDCIEssenceDescriptor* yuv_desc = new ASDCP::MXF::CDCIEssenceDescriptor(g_dict);
 
                     yuv_desc->CodingEquations = color.coding_equations().data();
 
@@ -610,7 +670,7 @@ f_in = freopen(NULL, "rb", stdin);
 
                     /* RGB image */
 
-                    ASDCP::MXF::RGBAEssenceDescriptor *rgba_desc = new ASDCP::MXF::RGBAEssenceDescriptor(g_dict);
+                    ASDCP::MXF::RGBAEssenceDescriptor* rgba_desc = new ASDCP::MXF::RGBAEssenceDescriptor(g_dict);
 
                     if (pdesc.ImageComponents[1].YRsize == 2 || pdesc.ImageComponents[2].YRsize == 2) {
 
@@ -629,7 +689,7 @@ f_in = freopen(NULL, "rb", stdin);
                         rgba_desc->ComponentMinRef = 0;
 
                     }
-                    
+
                     /* compute the J2C Layout */
 
                     if (cli_args["components"].as<ImageComponents>() == ImageComponents::XYZ) {
@@ -703,7 +763,7 @@ f_in = freopen(NULL, "rb", stdin);
                 desc->ColorPrimaries = color.color_primaries().data();
 
                 desc->VideoLineMap = ASDCP::MXF::LineMapPair(0, 0);
-             
+
                 /* we do not know the container duration */
 
                 desc->ContainerDuration.empty();

@@ -31,31 +31,74 @@
 
 J2CFile::J2CFile(FILE *fp,
                  std::vector<uint8_t>::size_type initial_buf_sz,
-                 std::vector<uint8_t>::size_type read_buf_sz) : good_(true), codestream_()
+                 std::vector<uint8_t>::size_type read_buf_sz) :
+    good_(true),
+    codestream_(),
+    file_paths_stack_(),
+    initial_buf_sz_(initial_buf_sz),
+    read_buf_sz_(read_buf_sz)
 {
-
-  this->codestream_.reserve(initial_buf_sz);
-
-  while (true)
-  {
-
-    std::vector<uint8_t>::size_type old_sz = this->codestream_.size();
-
-    this->codestream_.resize(old_sz + read_buf_sz);
-
-    size_t sz = fread(this->codestream_.data() + old_sz, 1, read_buf_sz, fp);
-
-    if (sz != read_buf_sz)
-    {
-
-      this->codestream_.resize(old_sz + sz);
-
-      break;
-    }
-  }
+    this->_fill_from_fp(fp);
 };
 
-void J2CFile::next() { this->good_ = false; };
+J2CFile::J2CFile(const std::vector<std::string>& file_paths,
+    std::vector<uint8_t>::size_type initial_buf_sz,
+    std::vector<uint8_t>::size_type read_buf_sz) :
+    good_(true),
+    codestream_(),
+    file_paths_stack_(file_paths.rbegin(), file_paths.rend()),
+    initial_buf_sz_(initial_buf_sz),
+    read_buf_sz_(read_buf_sz)
+{
+    this->next();
+};
+
+void J2CFile::_fill_from_fp(FILE* fp) {
+
+    this->codestream_.reserve(this->initial_buf_sz_);
+    this->codestream_.resize(0);
+
+    while (true) {
+
+        std::vector<uint8_t>::size_type old_sz = this->codestream_.size();
+
+        this->codestream_.resize(old_sz + this->read_buf_sz_);
+
+        size_t sz = fread(this->codestream_.data() + old_sz, 1, this->read_buf_sz_, fp);
+
+        if (sz != this->read_buf_sz_) {
+
+            this->codestream_.resize(old_sz + sz);
+
+            break;
+        }
+    }
+}
+
+void J2CFile::next() { 
+
+    if (this->file_paths_stack_.size() == 0) {
+
+        this->good_ = false;
+
+        return;
+
+    }
+
+    FILE* fp = fopen(file_paths_stack_.back().c_str(), "rb");
+
+
+    if (!fp) {
+        throw std::runtime_error("Cannot open file: " + file_paths_stack_.back());
+    }
+
+    this->_fill_from_fp(fp);
+
+    fclose(fp);
+
+    file_paths_stack_.pop_back();
+
+};
 
 bool J2CFile::good() const { return this->good_; };
 
@@ -94,7 +137,7 @@ MJCFile::MJCFile(FILE *fp) : good_(true), codestream_(), fp_(fp)
   }
 
   this->next();
-};
+}
 
 void MJCFile::next()
 {
