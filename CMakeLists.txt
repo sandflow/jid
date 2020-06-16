@@ -1,5 +1,5 @@
 cmake_minimum_required (VERSION 2.8)
-project (dcdm2imf)
+project(jid)
 
 # import boost
 
@@ -20,34 +20,52 @@ elseif(UNIX)
 	add_definitions(/DASDCP_PLATFORM=\"unix\")
 endif(WIN32)
 
-# project files
+# coomon includes
 
-file(GLOB_RECURSE SRC_FILES src/main/*.cpp src/*.h )
-file(GLOB_RECURSE INCLUDE_FILES src/main/*.h )
-include_directories(${INCLUDE_FILES})
-add_executable(${PROJECT_NAME} ${SRC_FILES} ${INCLUDE_FILES})
-target_link_libraries(${PROJECT_NAME} ${Boost_LIBRARIES} libas02)
+include_directories(src/main)
+
+# jid-writer
+
+set(JID_WRITER "jid-writer")
+add_executable(${JID_WRITER} src/main/jid-writer.cpp src/main/CodestreamSequence.cpp)
+target_link_libraries(${JID_WRITER} ${Boost_LIBRARIES} libas02)
+
+# jid-reader
+
+set(JID_READER "jid-reader")
+add_executable(${JID_READER} src/main/jid-reader.cpp)
+target_link_libraries(${JID_READER} ${Boost_LIBRARIES} libas02)
 
 # tests
 
 enable_testing()
 
-add_test(NAME "part1-j2c-wrapping" COMMAND ${PROJECT_NAME} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part1.j2c" --format J2C --out part1-j2c.mxf)
+add_test(NAME "part1-j2c-wrapping" COMMAND ${JID_WRITER} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part1.j2c" --format J2C --out part1-j2c.mxf)
 
-add_test(NAME "part15-j2c-wrapping" COMMAND ${PROJECT_NAME} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part15.j2c" --format J2C --out part15-j2c.mxf)
+add_test(NAME "part15-j2c-wrapping" COMMAND ${JID_WRITER} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part15.j2c" --format J2C --out part15-j2c.mxf)
 
-add_test(NAME "part1-mjc-wrapping" COMMAND ${PROJECT_NAME} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part1.mjc" --format MJC --out part1-mjc.mxf)
+add_test(NAME "part1-mjc-wrapping" COMMAND ${JID_WRITER} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part1.mjc" --format MJC --out part1-mjc.mxf)
 
-add_test(NAME "part15-mjc-wrapping" COMMAND ${PROJECT_NAME} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part15.mjc" --format MJC --out part15-mjc.mxf)
+add_test(NAME "part15-mjc-wrapping" COMMAND ${JID_WRITER} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part15.mjc" --format MJC --out part15-mjc.mxf)
 
-add_test(NAME "yuv422_10b_p15-wrapping" COMMAND ${PROJECT_NAME} --color COLOR.3 --quantization QE.1 --components YCbCr --format J2C  --in "${PROJECT_SOURCE_DIR}/src/test/resources/yuv422_10b_p15.j2c" --out yuv422_10b_p15.mxf)
+add_test(NAME "yuv422_10b_p15-wrapping" COMMAND ${JID_WRITER} --color COLOR.3 --quantization QE.1 --components YCbCr --format J2C  --in "${PROJECT_SOURCE_DIR}/src/test/resources/yuv422_10b_p15.j2c" --out yuv422_10b_p15.mxf)
 
-add_test(NAME "j2c-seq-wrapping" COMMAND ${PROJECT_NAME} --color COLOR.3 --quantization QE.1 --components YCbCr --format J2C  --in "${PROJECT_SOURCE_DIR}/src/test/resources/j2c-sequence" --out j2c-seq.mxf)
+add_test(NAME "j2c-seq-wrapping" COMMAND ${JID_WRITER} --color COLOR.3 --quantization QE.1 --components YCbCr --format J2C  --in "${PROJECT_SOURCE_DIR}/src/test/resources/j2c-sequence" --out j2c-seq.mxf)
+
+set(J2C_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/j2c-out)
+
+file(MAKE_DIRECTORY ${J2C_OUT_DIR})
+
+add_test(NAME "unwrapping-j2c" COMMAND ${JID_READER} --in part1-mjc.mxf --format J2C --out ${J2C_OUT_DIR})
+
+add_test(NAME "unwrapping-mjc-file" COMMAND ${JID_READER} --in part1-mjc.mxf --format MJC --out "out.mjc")
+
+add_test(NAME "unwrapping-mjc-stdout" COMMAND ${JID_READER} --in part1-mjc.mxf --format MJC)
 
 # compiler settings
 
-set_property(TARGET ${PROJECT_NAME} PROPERTY CXX_STANDARD 11)
-set_property(TARGET ${PROJECT_NAME} PROPERTY LINKER_LANGUAGE CXX)
+set_property(DIRECTORY PROPERTY CXX_STANDARD 11)
+set_property(DIRECTORY PROPERTY LINKER_LANGUAGE CXX)
 
 # force warnings to be treated as errors
 
