@@ -2,7 +2,7 @@
 
 _THIS IS EXPERIMENTAL SOFTWARE_
 
-Wraps JPEG 2000 codestreams into an Image Track File as specified in SMPTE ST 2067-21 (App 2E) and (proposed) SMPTE ST 2067-40 (App 4)
+Wraps/unwraps JPEG 2000 codestreams to/from an Image Track File as specified in SMPTE ST 2067-21 (App 2E) and (proposed) SMPTE ST 2067-40 (App 4)
 
 ## Prerequisites
 
@@ -14,11 +14,13 @@ Wraps JPEG 2000 codestreams into an Image Track File as specified in SMPTE ST 20
 ## Known limitations
 
 * Does not support interlaced images
-* Supported input formats: MJC codestream sequence and J2C single codestream
-
+* Supported input/output formats:
+  * MJC codestream sequence
+  * individual J2C codestreams
+  
 ## Examples uses
 
-### Performance comparison
+### Coding/wrapping performance testing
 
 The following use the demonstration encoder/decoder available at <https://kakadusoftware.com/downloads/>.
 
@@ -27,7 +29,7 @@ The following use the demonstration encoder/decoder available at <https://kakadu
 ```
 time ( kdu_v_compress -i ~/Downloads/tiff-files/mer_shrt_23976_vdm_sdr_rec709_g24_3840x2160_20170913_12bit_DCDM.00090000.tif+100 -o - \
   Simf="{6,0,rev}" -in_prec 12M -num_threads 1 \
-  | dcdm2imf --format MJC --out ~/Downloads/part1-r.mxf )
+  | jid-writer --format MJC --out ~/Downloads/part1-r.mxf )
 ```
 
 #### High-throughput JPEG 2000
@@ -35,16 +37,16 @@ time ( kdu_v_compress -i ~/Downloads/tiff-files/mer_shrt_23976_vdm_sdr_rec709_g2
 ```
 time ( kdu_v_compress -i ~/Downloads/tiff-files/mer_shrt_23976_vdm_sdr_rec709_g24_3840x2160_20170913_12bit_DCDM.00090000.tif+100 -o - Corder="CPRL" Clevels="{6}" \
 Cprecincts="{256,256},{256,256},{256,256},{256,256},{256,256},{256,256},{128,128}" ORGgen_tlm="{3}" ORGtparts=C Cblk="{32,32}" \
--num_threads 1 Creversible=yes Cmodes=HT -in_prec 12M | dcdm2imf --format MJC --out ~/Downloads/part15-r.mxf )
+-num_threads 1 Creversible=yes Cmodes=HT -in_prec 12M | jid-writer --format MJC --out ~/Downloads/part15-r.mxf )
 ```
 
-### Typical use
+### Coding/wrapping typical use
 
 #### JPEG 2000 Part 1
 
 ```
 kdu_v_compress -i ~/Downloads/tiff-files/mer_shrt_23976_vdm_sdr_rec709_g24_3840x2160_20170913_12bit_DCDM.00090000.tif+100 -o - Simf="{6,0,rev}" -in_prec 12M \
-  | dcdm2imf --format MJC --out ~/Downloads/part1-r.mxf
+  | jid-writer --format MJC --out ~/Downloads/part1-r.mxf
 ```
 
 #### High-throughput JPEG 2000
@@ -52,7 +54,14 @@ kdu_v_compress -i ~/Downloads/tiff-files/mer_shrt_23976_vdm_sdr_rec709_g24_3840x
 ```
 kdu_v_compress -i ~/Downloads/tiff-files/mer_shrt_23976_vdm_sdr_rec709_g24_3840x2160_20170913_12bit_DCDM.00090000.tif+100 -o - Corder="CPRL" Clevels="{6}" \
 Cprecincts="{256,256},{256,256},{256,256},{256,256},{256,256},{256,256},{128,128}" ORGgen_tlm="{3}" ORGtparts=C Cblk="{32,32}" Creversible=yes Cmodes=HT -in_prec 12M \
-  | dcdm2imf --format MJC --out ~/Downloads/part15-r.mxf
+  | jid-writer --format MJC --out ~/Downloads/part15-r.mxf
+```
+
+### Unwrapping example use
+
+```
+mkdir ~/Downloads/j2c-out
+jid-reader --in ~/Downloads/part15-r.mxf --format J2C --out ~/Downloads/j2c-out
 ```
 
 ## Ubuntu build instructions
