@@ -97,12 +97,12 @@ int main(int argc, const char* argv[]) {
 
     cli_opts.add_options()
         ("help", "Prints usage")
-        ("format", boost::program_options::value<OutputFormats>()->default_value(OutputFormats::J2C), "Ouput codestream format\n"
+        ("format", boost::program_options::value<OutputFormats>()->default_value(OutputFormats::J2C), "Output format\n"
             "  MJC: \t16-byte header followed by a sequence of J2C codestreams, each preceded by a 4-byte little-endian length\n"
-            "  J2C: \tsingle JPEG 2000 codestream")
+            "  J2C: \tindividual JPEG 2000 codestreams")
         ("buffer-size", boost::program_options::value<uint32_t>()->default_value(8192*8192*3*2 /* 8K */), "Read buffer size (8K 4:4:4 16-bit if unspecified)")
-        ("out", boost::program_options::value<std::string>(), "Output file path (or stdout if none is specified)")
-        ("in", boost::program_options::value<std::string>()->required(), "Input file path");
+        ("out", boost::program_options::value<std::string>(), "Output path (or stdout if none is specified)")
+        ("in", boost::program_options::value<std::string>()->required(), "Input MXF file path");
 
     boost::program_options::variables_map cli_args;
 
