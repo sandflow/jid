@@ -695,12 +695,16 @@ int main(int argc, const char* argv[]) {
                     if (cli_args["components"].as<ImageComponents>() == ImageComponents::XYZ) {
 
                         j2c_layout = { 0xd8, pixel_depth, 0xd9, pixel_depth, 0xda, pixel_depth, 0x00 };
-
+                        
                     } else {
 
                         j2c_layout = { 0x52, pixel_depth, 0x47, pixel_depth, 0x42, pixel_depth, 0x00 };
 
                     }
+
+                    /* set Pixel Layout (ignored in the case of App 2) */
+
+                    rgba_desc->PixelLayout.Set(j2c_layout.data());
 
                     desc = rgba_desc;
 
