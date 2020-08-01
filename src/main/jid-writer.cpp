@@ -34,6 +34,7 @@
 #include <stdexcept>
 #include <iostream>
 #include <string>
+#include <algorithm>
 #include <map>
 #include "CodestreamSequence.h"
 #include "J2KProfileULMap.h"
@@ -519,6 +520,8 @@ int main(int argc, const char* argv[]) {
                         }
 
                     }
+
+                    std::sort(file_list.begin(), file_list.end());
 
                     seq.reset(new J2CFile(file_list));
                 }
