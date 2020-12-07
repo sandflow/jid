@@ -709,6 +709,10 @@ int main(int argc, const char* argv[]) {
 
                     rgba_desc->PixelLayout.Set(j2c_layout.data());
 
+                    /* ScanningDirection shall be present and zero */
+                    
+                    rgba_desc->ScanningDirection.set(0);
+
                     desc = rgba_desc;
 
                 }
