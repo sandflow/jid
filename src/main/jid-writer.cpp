@@ -777,7 +777,7 @@ int main(int argc, const char* argv[]) {
 
                 /* we do not know the container duration */
 
-                desc->ContainerDuration.empty();
+                desc->ContainerDuration.set_has_value(false);
 
                 ASDCP::MXF::FileDescriptor* essence_descriptor = static_cast<ASDCP::MXF::FileDescriptor*>(desc);
 
