@@ -148,14 +148,9 @@ int main(int argc, const char* argv[]) {
                 if (mode == -1) {
                     throw std::runtime_error("Cannot reopen stdout");
                 }
-
-                mjc_output = stdout;
-
-#else
-
-                mjc_output = stdout;
-
 #endif
+
+                mjc_output = stdout;
 
             } else {
             
