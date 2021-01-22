@@ -143,17 +143,17 @@ int main(int argc, const char* argv[]) {
 
 #ifdef WIN32
 
-                int mode = _setmode(_fileno(stdin), O_BINARY);
+                int mode = _setmode(_fileno(stdout), O_BINARY);
 
                 if (mode == -1) {
                     throw std::runtime_error("Cannot reopen stdout");
                 }
 
-                mjc_output = stdin;
+                mjc_output = stdout;
 
 #else
 
-                mjc_output = freopen(NULL, "rb", stdin);
+                mjc_output = freopen(NULL, "rb", stdout);
 
                 if (!mjc_output) {
                     throw std::runtime_error("Cannot reopen stdout");
