@@ -139,27 +139,18 @@ int main(int argc, const char* argv[]) {
 
             if (cli_args["out"].empty()) {
 
-                /* open stdin in binary mode */
+                /* open stdout in binary mode */
 
 #ifdef WIN32
 
-                int mode = _setmode(_fileno(stdin), O_BINARY);
+                int mode = _setmode(_fileno(stdout), O_BINARY);
 
                 if (mode == -1) {
                     throw std::runtime_error("Cannot reopen stdout");
                 }
-
-                mjc_output = stdin;
-
-#else
-
-                mjc_output = freopen(NULL, "rb", stdin);
-
-                if (!mjc_output) {
-                    throw std::runtime_error("Cannot reopen stdout");
-                }
-
 #endif
+
+                mjc_output = stdout;
 
             } else {
             
