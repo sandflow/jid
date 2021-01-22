@@ -153,11 +153,7 @@ int main(int argc, const char* argv[]) {
 
 #else
 
-                mjc_output = freopen(NULL, "rb", stdout);
-
-                if (!mjc_output) {
-                    throw std::runtime_error("Cannot reopen stdout");
-                }
+                mjc_output = stdout;
 
 #endif
 
