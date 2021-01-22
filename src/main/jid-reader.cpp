@@ -139,7 +139,7 @@ int main(int argc, const char* argv[]) {
 
             if (cli_args["out"].empty()) {
 
-                /* open stdin in binary mode */
+                /* open stdout in binary mode */
 
 #ifdef WIN32
 
