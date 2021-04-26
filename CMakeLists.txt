@@ -52,6 +52,8 @@ add_test(NAME "yuv422_10b_p15-wrapping" COMMAND ${JID_WRITER} --color COLOR.3 --
 
 add_test(NAME "j2c-seq-wrapping" COMMAND ${JID_WRITER} --color COLOR.3 --quantization QE.1 --components YCbCr --format J2C  --in "${PROJECT_SOURCE_DIR}/src/test/resources/j2c-sequence" --out j2c-seq.mxf)
 
+add_test(NAME "j2c-wrapping-with-areas" COMMAND ${JID_WRITER} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part1.j2c" --format J2C --display_area 10 20 1000 1010 --active_area 10 20 500 510 --out j2c-wrapping-with-areas.mxf)
+
 set(J2C_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/j2c-out)
 
 file(MAKE_DIRECTORY ${J2C_OUT_DIR})

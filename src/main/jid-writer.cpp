@@ -406,7 +406,9 @@ int main(int argc, const char* argv[]) {
         ("in", boost::program_options::value<std::string>(), "Input file path (or stdin if none is specified)")
         ("color", boost::program_options::value<std::string>()->default_value(EnumeratedColorimetry::COLOR_APP4_2.symbol()), EnumeratedColorimetry::usage().c_str())
         ("components", boost::program_options::value<ImageComponents>()->default_value(ImageComponents::XYZ), "Image components: RGB or YCbCr or XYZ")
-        ("quantization", boost::program_options::value<Quantization>()->default_value(Quantization::QE_2), "Quantization: QE.1 or QE.2");
+        ("quantization", boost::program_options::value<Quantization>()->default_value(Quantization::QE_2), "Quantization: QE.1 or QE.2")
+        ("active_area", boost::program_options::value<std::vector<int>>()->multitoken(), "Active area rectangle (in pixels): x_offset y_offset width height")
+        ("display_area", boost::program_options::value<std::vector<int>>()->multitoken(), "Display rectangle (in pixels): x_offset y_offset width height");
 
     boost::program_options::variables_map cli_args;
 
@@ -774,6 +776,53 @@ int main(int argc, const char* argv[]) {
                 desc->ColorPrimaries = color.color_primaries().data();
 
                 desc->VideoLineMap = ASDCP::MXF::LineMapPair(0, 0);
+
+                /* DisplayF2Offset is required by ST 2067-21, but set to 0 since interlaced is not supported by JID */
+
+                desc->DisplayF2Offset.set(0);
+
+                if (cli_args.count("display_area")) {
+
+                    std::vector<int> display_rectangle = cli_args["display_area"].as<std::vector<int>>();
+
+                    if (display_rectangle.size() != 4 ||
+                        *std::min_element(display_rectangle.begin(), display_rectangle.end()) < 0) {
+                        throw std::runtime_error("Display area must consist of exactly four positive integer values");
+                    }
+
+                    desc->DisplayXOffset = display_rectangle[0];
+                    desc->DisplayYOffset = display_rectangle[1];
+                    desc->DisplayWidth = display_rectangle[2];
+                    desc->DisplayHeight = display_rectangle[3];
+
+                    if (desc->DisplayXOffset.get() + desc->DisplayWidth.get() > desc->StoredWidth ||
+                        desc->DisplayYOffset.get() + desc->DisplayHeight.get() > desc->StoredHeight) {
+                        throw std::runtime_error("Display area does not fit within the stored rectangle");
+                    }
+                }
+
+                if (cli_args.count("active_area")) {
+
+                    std::vector<int> active_rectangle = cli_args["active_area"].as<std::vector<int>>();
+
+                    if (active_rectangle.size() != 4 ||
+                        *std::min_element(active_rectangle.begin(), active_rectangle.end()) < 0) {
+                        throw std::runtime_error("Active area must consist of exactly four positive integer values");
+                    }
+
+                    desc->ActiveXOffset = active_rectangle[0];
+                    desc->ActiveYOffset = active_rectangle[1];
+                    desc->ActiveWidth = active_rectangle[2];
+                    desc->ActiveHeight = active_rectangle[3];
+
+                    int display_width = desc->DisplayWidth.empty() ? desc->StoredWidth : desc->DisplayWidth.get();
+                    int display_height = desc->DisplayHeight.empty() ? desc->StoredHeight : desc->DisplayHeight.get();
+
+                    if (desc->ActiveXOffset.get() + desc->ActiveWidth.get() > display_width ||
+                        desc->ActiveYOffset.get() + desc->ActiveHeight.get() > display_height) {
+                        throw std::runtime_error("Active area does not fit within the display rectangle");
+                    }
+                }
 
                 /* we do not know the container duration */
 
