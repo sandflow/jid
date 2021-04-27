@@ -350,7 +350,6 @@ public:
         return this->coding_equations_;
     }
 
-
 private:
 
     EnumeratedColorimetry(const std::string& symbol,
@@ -374,6 +373,10 @@ private:
     std::array<uint8_t, 16> color_primaries_;
     std::array<uint8_t, 16> coding_equations_;
 };
+
+bool operator==(const EnumeratedColorimetry& lhs, const EnumeratedColorimetry& rhs) { return &lhs == &rhs; }
+
+bool operator!=(const EnumeratedColorimetry& lhs, const EnumeratedColorimetry& rhs) { return !(lhs == rhs); }
 
 std::map<std::string, EnumeratedColorimetry*> EnumeratedColorimetry::colors_;
 const EnumeratedColorimetry EnumeratedColorimetry::COLOR_1("COLOR.1", TransferCharacteristic_ITU709, ColorPrimaries_ITU470_PAL, CodingEquations_ITU601);
@@ -407,8 +410,12 @@ int main(int argc, const char* argv[]) {
         ("color", boost::program_options::value<std::string>()->default_value(EnumeratedColorimetry::COLOR_APP4_2.symbol()), EnumeratedColorimetry::usage().c_str())
         ("components", boost::program_options::value<ImageComponents>()->default_value(ImageComponents::XYZ), "Image components: RGB or YCbCr or XYZ")
         ("quantization", boost::program_options::value<Quantization>()->default_value(Quantization::QE_2), "Quantization: QE.1 or QE.2")
-        ("active_area", boost::program_options::value<std::vector<int>>()->multitoken(), "Active area rectangle (in pixels): x_offset y_offset width height")
-        ("display_area", boost::program_options::value<std::vector<int>>()->multitoken(), "Display rectangle (in pixels): x_offset y_offset width height");
+        ("active_area", boost::program_options::value<std::vector<ui32_t>>()->multitoken(), "Active area rectangle (in pixels): x_offset y_offset width height")
+        ("display_area", boost::program_options::value<std::vector<ui32_t>>()->multitoken(), "Display rectangle (in pixels): x_offset y_offset width height")
+        ("mastering_display_primaries", boost::program_options::value<std::vector<ui16_t>>()->multitoken(), "Mastering Display Primaries: x_0 y_0 x_1 y_1 x_2 y_2")
+        ("mastering_display_white_point_chroma", boost::program_options::value<std::vector<ui16_t>>()->multitoken(), "Mastering Display White Point Chromaticity: x y")
+        ("mastering_display_max_luminance", boost::program_options::value<ui32_t>(), "Mastering Display Maximum Luminance")
+        ("mastering_display_min_luminance", boost::program_options::value<ui32_t>(), "Mastering Display Minimum Luminance");
 
     boost::program_options::variables_map cli_args;
 
@@ -783,10 +790,9 @@ int main(int argc, const char* argv[]) {
 
                 if (cli_args.count("display_area")) {
 
-                    std::vector<int> display_rectangle = cli_args["display_area"].as<std::vector<int>>();
+                    std::vector<ui32_t> display_rectangle = cli_args["display_area"].as<std::vector<ui32_t>>();
 
-                    if (display_rectangle.size() != 4 ||
-                        *std::min_element(display_rectangle.begin(), display_rectangle.end()) < 0) {
+                    if (display_rectangle.size() != 4) {
                         throw std::runtime_error("Display area must consist of exactly four positive integer values");
                     }
 
@@ -803,10 +809,9 @@ int main(int argc, const char* argv[]) {
 
                 if (cli_args.count("active_area")) {
 
-                    std::vector<int> active_rectangle = cli_args["active_area"].as<std::vector<int>>();
+                    std::vector<ui32_t> active_rectangle = cli_args["active_area"].as<std::vector<ui32_t>>();
 
-                    if (active_rectangle.size() != 4 ||
-                        *std::min_element(active_rectangle.begin(), active_rectangle.end()) < 0) {
+                    if (active_rectangle.size() != 4) {
                         throw std::runtime_error("Active area must consist of exactly four positive integer values");
                     }
 
@@ -822,6 +827,62 @@ int main(int argc, const char* argv[]) {
                         desc->ActiveYOffset.get() + desc->ActiveHeight.get() > display_height) {
                         throw std::runtime_error("Active area does not fit within the display rectangle");
                     }
+                }
+                
+                /* Mastering Display Color Volume Metadata */
+      
+                if (cli_args.count("mastering_display_primaries") ||
+                    cli_args.count("mastering_display_white_point_chroma") ||
+                    cli_args.count("mastering_display_max_luminance") ||
+                    cli_args.count("mastering_display_min_luminance")) {
+
+                    if (cli_args.count("mastering_display_primaries") != 1 ||
+                        cli_args.count("mastering_display_white_point_chroma") != 1 ||
+                        cli_args.count("mastering_display_max_luminance") != 1 ||
+                        cli_args.count("mastering_display_min_luminance") != 1
+                        ) {
+                    
+                        throw std::runtime_error("All Mastering Display Color Volume Metadata items must be defined");
+
+                    }
+
+                    if (! (color == EnumeratedColorimetry::COLOR_3 ||
+                            color == EnumeratedColorimetry::COLOR_5 ||
+                        color == EnumeratedColorimetry::COLOR_6 ||
+                        color == EnumeratedColorimetry::COLOR_7)
+                        ) {
+
+                        throw std::runtime_error("Mastering Display Color Volume Metadata can only be used with COLOR.3, COLOR.5, COLOR.6 or COLOR.7");
+
+                    }
+
+                    std::vector<ui16_t> mastering_display_primaries = cli_args["mastering_display_primaries"].as<std::vector<ui16_t>>();
+
+                    if (mastering_display_primaries.size() != 6) {
+                        throw std::runtime_error("Mastering display primaries must consist of exactly 6 positive integer values");
+                    }
+
+                    ASDCP::MXF::ColorPrimary p1(mastering_display_primaries[0], mastering_display_primaries[1]);
+                    ASDCP::MXF::ColorPrimary p2(mastering_display_primaries[2], mastering_display_primaries[3]);
+                    ASDCP::MXF::ColorPrimary p3(mastering_display_primaries[4], mastering_display_primaries[5]);
+
+                    desc->MasteringDisplayPrimaries = ASDCP::MXF::ThreeColorPrimaries(p1, p2, p3);
+
+                    std::vector<ui16_t> mastering_display_white_point_chroma = cli_args["mastering_display_white_point_chroma"].as<std::vector<ui16_t>>();
+
+                    if (mastering_display_white_point_chroma.size() != 2) {
+                        throw std::runtime_error("Mastering Display White Point Chromaticity must consist of exactly 2 positive integer values");
+                    }
+
+                    desc->MasteringDisplayWhitePointChromaticity = ASDCP::MXF::ColorPrimary(mastering_display_white_point_chroma[0], mastering_display_white_point_chroma[1]);
+
+                    if (mastering_display_white_point_chroma.size() != 2) {
+                        throw std::runtime_error("Mastering Display White Point Chromaticity must consist of exactly 2 positive integer values");
+                    }
+
+                    desc->MasteringDisplayMinimumLuminance = cli_args["mastering_display_min_luminance"].as<ui32_t>();
+                    desc->MasteringDisplayMaximumLuminance = cli_args["mastering_display_max_luminance"].as<ui32_t>();
+
                 }
 
                 /* we do not know the container duration */

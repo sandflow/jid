@@ -52,7 +52,24 @@ add_test(NAME "yuv422_10b_p15-wrapping" COMMAND ${JID_WRITER} --color COLOR.3 --
 
 add_test(NAME "j2c-seq-wrapping" COMMAND ${JID_WRITER} --color COLOR.3 --quantization QE.1 --components YCbCr --format J2C  --in "${PROJECT_SOURCE_DIR}/src/test/resources/j2c-sequence" --out j2c-seq.mxf)
 
-add_test(NAME "j2c-wrapping-with-areas" COMMAND ${JID_WRITER} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part1.j2c" --format J2C --display_area 10 20 1000 1010 --active_area 10 20 500 510 --out j2c-wrapping-with-areas.mxf)
+add_test(NAME "j2c-wrapping-with-areas" COMMAND ${JID_WRITER}
+	--in "${PROJECT_SOURCE_DIR}/src/test/resources/part1.j2c"
+	--out j2c-wrapping-with-areas.mxf
+	--format J2C
+	--display_area 10 20 1000 1010
+	--active_area 10 20 500 510
+	)
+
+add_test(NAME "j2c-wrapping-with-color-volume" COMMAND ${JID_WRITER}
+	--in "${PROJECT_SOURCE_DIR}/src/test/resources/part1.j2c"
+	--out j2c-wrapping-with-color-volume.mxf
+	--format J2C
+	--color COLOR.3
+	--mastering_display_primaries 35400 14600 8500 39850 6550 2300
+	--mastering_display_white_point_chroma 15635 16450
+	--mastering_display_max_luminance 10000000
+	--mastering_display_min_luminance 50
+	)
 
 set(J2C_OUT_DIR ${CMAKE_CURRENT_BINARY_DIR}/j2c-out)
 
