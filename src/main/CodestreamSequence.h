@@ -87,7 +87,8 @@ protected:
     bool good_;
     std::vector<uint8_t> codestream_;
     FILE* fp_;
-
+    bool is_cbr_;
+    uint32_t codestream_len_;
 };
 
 class FakeSequence : public CodestreamSequence {
