@@ -71,6 +71,7 @@ std::array<uint8_t, 16> CodingEquations_ITU2020_NCL = { 0x06, 0x0e, 0x2b, 0x34, 
 std::array<uint8_t, 16> TransferCharacteristic_ITU709 = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x01, 0x04, 0x01, 0x01, 0x01, 0x01, 0x02, 0x00, 0x00 };
 std::array<uint8_t, 16> TransferCharacteristic_IEC6196624_xvYCC = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x01, 0x08, 0x00, 0x00 };
 std::array<uint8_t, 16> TransferCharacteristic_ITU2020 = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0e, 0x04, 0x01, 0x01, 0x01, 0x01, 0x09, 0x00, 0x00 };
+std::array<uint8_t, 16> TransferCharacteristic_HLG = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x01, 0x0b, 0x00, 0x00 };
 std::array<uint8_t, 16> TransferCharacteristic_SMPTEST2084 = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x01, 0x0a, 0x00, 0x00 };
 std::array<uint8_t, 16> TransferCharacteristic_CinemaMezzanine_DCDM = { 0x06, 0x0e, 0x2b, 0x34, 0x04, 0x01, 0x01, 0x0d, 0x04, 0x01, 0x01, 0x01, 0x01, 0x13, 0x00, 0x00 };
 
@@ -309,6 +310,7 @@ public:
     static const EnumeratedColorimetry COLOR_5;
     static const EnumeratedColorimetry COLOR_6;
     static const EnumeratedColorimetry COLOR_7;
+    static const EnumeratedColorimetry COLOR_8;
     static const EnumeratedColorimetry COLOR_APP4_2;
 
     static const EnumeratedColorimetry& fromString(const std::string s) {
@@ -386,6 +388,7 @@ const EnumeratedColorimetry EnumeratedColorimetry::COLOR_4("COLOR.4", TransferCh
 const EnumeratedColorimetry EnumeratedColorimetry::COLOR_5("COLOR.5", TransferCharacteristic_ITU2020, ColorPrimaries_ITU2020, CodingEquations_ITU2020_NCL);
 const EnumeratedColorimetry EnumeratedColorimetry::COLOR_6("COLOR.6", TransferCharacteristic_SMPTEST2084, ColorPrimaries_P3D65, CodingEquations_ITU2020_NCL /* not used */);
 const EnumeratedColorimetry EnumeratedColorimetry::COLOR_7("COLOR.7", TransferCharacteristic_SMPTEST2084, ColorPrimaries_ITU2020, CodingEquations_ITU2020_NCL);
+const EnumeratedColorimetry EnumeratedColorimetry::COLOR_8("COLOR.8", TransferCharacteristic_HLG, ColorPrimaries_ITU2020, CodingEquations_ITU2020_NCL);
 const EnumeratedColorimetry EnumeratedColorimetry::COLOR_APP4_2("COLOR.APP4.2", TransferCharacteristic_CinemaMezzanine_DCDM, ColorPrimaries_CinemaMezzanine, CodingEquations_ITU2020_NCL /* not used */);
 
 int main(int argc, const char* argv[]) {
