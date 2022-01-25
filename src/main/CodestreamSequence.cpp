@@ -26,6 +26,7 @@
 
 #include "CodestreamSequence.h"
 #include <stdexcept>
+#include <iostream>
 
 /* J2CFile */
 
@@ -193,6 +194,19 @@ void MJCFile::next()
     this->good_ = false;
     return;
   }
+
+  /* trim codestream to EOC if CBR */
+  
+  if (this->is_cbr_) {
+    auto it = std::find(this->codestream_.rbegin(), this->codestream_.rend(), 0xd9);
+
+    if (it == this->codestream_.rend()) {
+      throw std::runtime_error("Codestream is missing an EOC marker");
+    }
+
+    this->codestream_.resize(std::distance(it, this->codestream_.rend()));
+  }
+   
 };
 
 bool MJCFile::good() const { return this->good_; };

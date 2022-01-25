@@ -81,8 +81,6 @@ add_test(NAME "unwrapping-j2c" COMMAND ${JID_READER} --in part1-mjc.mxf --format
 
 add_test(NAME "unwrapping-mjc-file" COMMAND ${JID_READER} --in part1-mjc.mxf --format MJC --out "out.mjc")
 
-add_test(NAME "unwrapping-mjc-stdout" COMMAND ${JID_READER} --in part1-mjc.mxf --format MJC)
-
 # compiler settings
 
 set_property(DIRECTORY PROPERTY CXX_STANDARD 11)
