@@ -26,7 +26,7 @@
 
 #include "CodestreamSequence.h"
 #include <stdexcept>
-#include <iostream>
+#include <algorithm>
 
 /* J2CFile */
 
