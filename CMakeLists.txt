@@ -46,6 +46,8 @@ add_test(NAME "part15-j2c-wrapping" COMMAND ${JID_WRITER} --in "${PROJECT_SOURCE
 
 add_test(NAME "part1-mjc-wrapping" COMMAND ${JID_WRITER} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part1.mjc" --format MJC --out part1-mjc.mxf)
 
+add_test(NAME "mjc-cbr-wrapping" COMMAND ${JID_WRITER} --in "${PROJECT_SOURCE_DIR}/src/test/resources/crowdrun-lowlatency.1920x1080-422-10bit-50p.mjc" --color COLOR.3 --quantization QE.1 --components YCbCr --format MJC --out part15-mjc-cbr.mxf)
+
 add_test(NAME "part15-mjc-wrapping" COMMAND ${JID_WRITER} --in "${PROJECT_SOURCE_DIR}/src/test/resources/part15.mjc" --format MJC --out part15-mjc.mxf)
 
 add_test(NAME "yuv422_10b_p15-wrapping" COMMAND ${JID_WRITER} --color COLOR.3 --quantization QE.1 --components YCbCr --format J2C  --in "${PROJECT_SOURCE_DIR}/src/test/resources/yuv422_10b_p15.j2c" --out yuv422_10b_p15.mxf)
@@ -78,8 +80,6 @@ file(MAKE_DIRECTORY ${J2C_OUT_DIR})
 add_test(NAME "unwrapping-j2c" COMMAND ${JID_READER} --in part1-mjc.mxf --format J2C --out ${J2C_OUT_DIR})
 
 add_test(NAME "unwrapping-mjc-file" COMMAND ${JID_READER} --in part1-mjc.mxf --format MJC --out "out.mjc")
-
-add_test(NAME "unwrapping-mjc-stdout" COMMAND ${JID_READER} --in part1-mjc.mxf --format MJC)
 
 # compiler settings
 

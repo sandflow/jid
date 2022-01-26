@@ -26,6 +26,7 @@
 
 #include "CodestreamSequence.h"
 #include <stdexcept>
+#include <algorithm>
 
 /* J2CFile */
 
@@ -124,7 +125,7 @@ void J2CFile::fill(ASDCP::JP2K::FrameBuffer &fb)
 
 /* MJCFile */
 
-MJCFile::MJCFile(FILE *fp) : good_(true), codestream_(), fp_(fp)
+MJCFile::MJCFile(FILE *fp) : good_(true), codestream_len_(0), codestream_(), fp_(fp)
 {
 
   uint8_t header[16];
@@ -136,25 +137,51 @@ MJCFile::MJCFile(FILE *fp) : good_(true), codestream_(), fp_(fp)
     throw std::runtime_error("Bad MJC file");
   }
 
+  this->is_cbr_ = header[15] & 4;
+
   this->next();
 }
 
 void MJCFile::next()
 {
 
-  /* read length */
+  size_t rd_sz;
 
-  uint8_t be_len[4];
+  /* get codestream length */
+  
+  uint32_t len;
+   
+  if (!this->is_cbr_ || this->codestream_len_ == 0) {
 
-  size_t rd_sz = fread(be_len, 1, sizeof be_len, this->fp_);
+    /* read the codestream length for every codestream if in vbr mode
+     * otherwise read it from the first codestream only
+     */
 
-  if (rd_sz != sizeof be_len)
-  {
-    this->good_ = false;
-    return;
+    uint8_t be_len[4];
+
+    rd_sz = fread(be_len, 1, sizeof be_len, this->fp_);
+
+    if (rd_sz != sizeof be_len) {
+        this->good_ = false;
+        return;
+    }
+
+    len = (be_len[0] << 24) + (be_len[1] << 16) + (be_len[2] << 8) + be_len[3];
+
+    if (this->is_cbr_) {
+
+      if (len == 0) {
+        throw std::runtime_error("MJC CBR length is 0");
+      }
+
+      this->codestream_len_ = len;
+    }
+
+  } else {
+  
+    len = this->codestream_len_;
+
   }
-
-  uint32_t len = (be_len[0] << 24) + (be_len[1] << 16) + (be_len[2] << 8) + be_len[3];
 
   /* read codestream */
 
@@ -167,6 +194,19 @@ void MJCFile::next()
     this->good_ = false;
     return;
   }
+
+  /* trim codestream to EOC if CBR */
+  
+  if (this->is_cbr_) {
+    auto it = std::find(this->codestream_.rbegin(), this->codestream_.rend(), 0xd9);
+
+    if (it == this->codestream_.rend()) {
+      throw std::runtime_error("Codestream is missing an EOC marker");
+    }
+
+    this->codestream_.resize(std::distance(it, this->codestream_.rend()));
+  }
+   
 };
 
 bool MJCFile::good() const { return this->good_; };
