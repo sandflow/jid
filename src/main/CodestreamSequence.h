@@ -27,8 +27,8 @@
 #ifndef COM_SANDFLOW_CODESTREAMSEQUENCE_H
 #define COM_SANDFLOW_CODESTREAMSEQUENCE_H
 
+#include <cstdint>
 #include <vector>
-#include <list>
 #include <AS_DCP.h>
 
 class CodestreamSequence {
