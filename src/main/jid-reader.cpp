@@ -176,7 +176,8 @@ int main(int argc, const char* argv[]) {
 
         /* open input file */
 
-        AS_02::JP2K::MXFReader reader;
+        Kumu::FileReaderFactory file_reader_factory;
+        AS_02::JP2K::MXFReader reader(file_reader_factory);
 
         result = reader.OpenRead(cli_args["in"].as<std::string>());
 
